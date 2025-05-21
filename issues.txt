@@ -1,0 +1,12 @@
+In an extension, the engines.vscode property specifies the minimum version of VS Code itself required to run the extension.
+package.json :
+    "engines": {
+        "vscode": "^1.76.0"
+    }
+There is no message in the developer setup telling you that your own version is outdated; the extension just won't load
+
+
+
+# Le logo ne s'affiche pas de le active bar
+- ca peut s'expliquer par le fait d'utiliser les meme ids
+

@@ -1,0 +1,9 @@
+th,
+td {
+  padding: 8px;
+  text-align: left;
+  border: 1px solid var(--vscode-editor-foreground);
+}
+th {
+  background-color: var(--vscode-editorWidget-border);
+}

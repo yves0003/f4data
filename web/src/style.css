@@ -1,0 +1,72 @@
+*,
+*:after,
+*:before {
+  box-sizing: border-box;
+}
+html,
+body,
+address,
+blockquote,
+div,
+form,
+fieldset,
+caption,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+ul,
+li,
+ol,
+ul,
+dl,
+dt,
+dd,
+table,
+tr,
+td,
+th,
+p,
+img {
+  margin: 0;
+  padding: 0;
+}
+address,
+caption,
+cite,
+dfn,
+th,
+var {
+  font-style: normal;
+  font-weight: normal;
+}
+
+img,
+fieldset {
+  border: none;
+}
+
+caption,
+th {
+  text-align: left;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: 100%;
+  font-weight: normal;
+}
+q:before,
+q:after {
+  content: "";
+}
+abbr,
+acronym {
+  border: 0;
+}

@@ -1,0 +1,11 @@
+1- (Ajouter plusieurs dictionnaires) trouver dans un répertoire et sous répertoire les fichier avec l'extension rds.
+- le nom sera déterminé à l'aide du répertoire ou fichiers.
+ou 
+2- (Ajouter un dictionnaire) selectionner directement le chemin vers un fichier
+
+si 2 alors :
+- demander un nom 
+
+
+1- Qu'est ce que je veux sauvegarde?
+    - identifier les fichiers rds

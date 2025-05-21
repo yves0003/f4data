@@ -1,0 +1,308 @@
+import * as vscode from "vscode";
+import { addDictionaries } from "./commands/addDictionaries";
+import {
+  AddInfoTitleView,
+  extractTextFromFile,
+  findMatchingDirectory,
+  getAllMarkdownFiles,
+  getFilesByExtension,
+  shouldResume,
+  sortVars,
+  validateLinkExistOrIsUnique,
+} from "./helpers/helpers";
+import { find, indexOf as lodashIndexOf } from "lodash";
+import { Dictionary, DictionaryProvider } from "./providers/dictionaryProvider";
+import path from "path";
+import { Parser } from "./helpers/Parser";
+import { ast_to_data, EnumNode } from "./helpers/ast_to_data";
+import { DicTabProvider } from "./providers/dicTabProvider";
+import { DicTabVarProvider } from "./providers/dicTabVarProvider";
+import { OutputTable } from "./helpers/ast_to_data";
+import { DocProvider } from "./providers/docProvider";
+import { MapProvider } from "./providers/mapProvider";
+import { MapPanelDiag } from "./panels/mapPanel";
+
+const parser = new Parser();
+interface State {
+  title: string;
+  name: string;
+  link: string;
+}
+type keytouse = "name" | "link";
+const upsert = function (
+  arr: listDico,
+  keyToUse: keytouse,
+  newval: Partial<listDico[0]>
+) {
+  let key: { [x: string]: string } = {};
+  if (newval[keyToUse] !== undefined) {
+    key[keyToUse] = newval[keyToUse];
+    const match = find(arr, key);
+    if (match) {
+      const index = lodashIndexOf(arr, find(arr, key));
+      arr.splice(index, 1, newval);
+    } else {
+      arr.push(newval);
+    }
+  }
+  return arr.sort((a, b) => {
+    if ((a.name || "") < (b.name || "")) {
+      return -1;
+    } else {
+      return 1;
+    }
+  });
+};
+
+export async function activate(context: vscode.ExtensionContext) {
+  const config = vscode.workspace.getConfiguration("f4data");
+  let selectedDic: OutputTable[] = [];
+  let allMappDic: EnumNode[];
+  const dictionaryProvider = new DictionaryProvider();
+  const dicTabProvider = new DicTabProvider();
+  const dicTabVarProvider = new DicTabVarProvider();
+  const docProvider = new DocProvider();
+  const mapProvider = new MapProvider();
+  const title_tab = new AddInfoTitleView("dic-tabs", dicTabProvider);
+  const title_var = new AddInfoTitleView("dic-vars", dicTabVarProvider);
+
+  const displayMapOnView = vscode.window.registerWebviewViewProvider(
+    mapProvider.viewType,
+    mapProvider
+  );
+  const refreshAll = vscode.commands.registerCommand(
+    "f4data.refreshAll",
+    async () => {
+      vscode.window.showInformationMessage("Actualisé!!!!");
+      //dictionaryProvider.setData();
+      dicTabProvider.setData([]);
+      dicTabVarProvider.setData([]);
+      docProvider.setData([]);
+      mapProvider.setDataAndUpdateContent([], "");
+      title_tab.setTitle("Tables");
+      title_var.setTitle(`Variables`);
+      selectedDic = [];
+      vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
+    }
+  );
+  const commandAddDictionaries = vscode.commands.registerCommand(
+    "f4data.addDictionaries",
+    async () => {
+      // The code you place here will be executed every time your command is executed
+      const state = {} as Partial<State>;
+      state.link = await addDictionaries({
+        title: "Create a new dictionary",
+        value: "",
+        placeholder: "Choose a link",
+        prompt: "Choose a link",
+        validate: validateLinkExistOrIsUnique,
+        shouldResume: shouldResume,
+      });
+      if (!state.link) {
+        return;
+      }
+      const list_dics = await getFilesByExtension(state.link, "rd");
+      const savedDictionaries = config.get("list") as listDico;
+
+      for (const dict of list_dics) {
+        const dictToAdd = { name: dict.filename, link: dict.filePath };
+        await config.update(
+          "list",
+          upsert(savedDictionaries, "name", dictToAdd),
+          true
+        );
+      }
+      dictionaryProvider.refresh();
+    }
+  );
+  const commandClickOnDicItem = vscode.commands.registerCommand(
+    "f4data.clickOnDicItem",
+    async (dicItem: Dictionary) => {
+      //vscode.commands.executeCommand("f4data.refreshAll");
+      dicTabProvider.setData([]);
+      dicTabVarProvider.setData([]);
+      docProvider.setData([]);
+      mapProvider.setDataAndUpdateContent([], "");
+      const selectDicLink = dictionaryProvider.on_item_clicked(dicItem);
+      const textFile = await extractTextFromFile(selectDicLink);
+      const ast = parser.parse(textFile);
+      const listTabsInfo = ast_to_data(ast.body);
+      console.log(listTabsInfo);
+      dicTabProvider.setLink(path.dirname(selectDicLink || ""));
+      dicTabProvider.setData(
+        listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name))
+      );
+      title_tab.setTitle(
+        `Tables${
+          listTabsInfo.tables.length > 0
+            ? ` (${listTabsInfo.tables.length})`
+            : ""
+        }`
+      );
+      title_var.setTitle(`Variables`);
+      selectedDic = listTabsInfo.tables;
+      allMappDic = listTabsInfo.mappings;
+
+      const docFolder = findMatchingDirectory(
+        path.dirname(selectDicLink || ""),
+        ["documents", "docs", "doc", "document"],
+        { caseSensitive: false }
+      );
+      if (docFolder) {
+        const listDocs = await getAllMarkdownFiles(docFolder);
+        docProvider.setData(
+          listDocs.sort((a, b) => a.filename.localeCompare(b.filename))
+        );
+      } else {
+        docProvider.setData([]);
+      }
+    }
+  );
+  const commandClickOnTable = vscode.commands.registerCommand(
+    "f4data.clickOnTable",
+    async (item) => {
+      if (selectedDic.length > 0) {
+        const listVarTabsInfo = selectedDic.find(
+          (dict) => dict.name === item.label
+        );
+        if (listVarTabsInfo) {
+          dicTabVarProvider.setData(listVarTabsInfo.variables.sort(sortVars));
+          title_var.setTitle(
+            `Variables${
+              listVarTabsInfo.variables.length > 0
+                ? ` (${listVarTabsInfo.variables.length})`
+                : ""
+            }`
+          );
+        } else {
+          dicTabVarProvider.setData([]);
+          vscode.window.showWarningMessage(`No vars for : ${item.label}`);
+        }
+      }
+    }
+  );
+  const displayDoc = vscode.commands.registerCommand(
+    "f4data.clickOnDoc",
+    async (item) => {
+      if (item.filePath) {
+        const markdownUri = vscode.Uri.file(item.filePath);
+        //await vscode.commands.executeCommand("vscode.open", markdownUri);
+        await vscode.commands.executeCommand(
+          "markdown.showPreview",
+          markdownUri
+        );
+      } else {
+        vscode.window.showWarningMessage(
+          "No markdown file associated with this item."
+        );
+      }
+    }
+  );
+  const copyVarVal = vscode.commands.registerCommand(
+    "f4data.copyVarVal",
+    (item) => {
+      if (item && item.label) {
+        vscode.env.clipboard.writeText(item.valName);
+        vscode.window.showInformationMessage(`Copied`);
+      } else {
+        vscode.window.showWarningMessage("No label to copy.");
+      }
+    }
+  );
+  const deleteDictionary = vscode.commands.registerCommand(
+    "f4data.deleteAdict",
+    async (item) => {
+      await dictionaryProvider.on_delete_item(item);
+      dictionaryProvider.refresh();
+      //statusBarItem.hide();
+      dicTabProvider.setData([]);
+      dicTabVarProvider.setData([]);
+      docProvider.setData([]);
+      title_var.setTitle(`Variables`);
+      title_tab.setTitle("Tables");
+      //mapProvider.updateContent([], "");
+    }
+  );
+  const openWorkDir = vscode.commands.registerCommand(
+    "f4data.openWorkDir",
+    async (item) => {
+      await dictionaryProvider.on_open_work_dir(item);
+      dictionaryProvider.refresh();
+    }
+  );
+  const displayMapOnClick = vscode.commands.registerCommand(
+    "f4data.displayMap",
+    async (item) => {
+      if (selectedDic.length > 0 && allMappDic.length > 0) {
+        const selectedMapp = allMappDic.find(
+          (e) => e.name.toLowerCase() === item.valName.toLowerCase()
+        );
+        if (selectedMapp && selectedMapp.members.length > 0) {
+          mapProvider.setDataAndUpdateContent(
+            selectedMapp.members,
+            item.valName
+          );
+        } else {
+          vscode.window.showErrorMessage(`Mapping Values are not defined`);
+        }
+        vscode.commands.executeCommand("mappingApanel.focus");
+      } else {
+        vscode.window.showErrorMessage(`Dictionay not defined`);
+      }
+    }
+  );
+  const updateWorkDir = vscode.commands.registerCommand(
+    "f4data.updateWorkDir",
+    async (item) => {
+      await dictionaryProvider.on_update_work_dir(item);
+      dictionaryProvider.refresh();
+    }
+  );
+  const clickOnVar = vscode.commands.registerCommand(
+    "f4data.clickOnVar",
+    () => {
+      mapProvider.setDataAndUpdateContent([], "");
+    }
+  );
+  const displayDiagramPage = vscode.commands.registerCommand(
+    "f4data.mapWebview",
+    async (dicItem: Dictionary) => {
+      const selectDicLink = dictionaryProvider.on_item_clicked(dicItem);
+      const textFile = await extractTextFromFile(selectDicLink);
+      const ast = parser.parse(textFile);
+      const listTabsInfo = ast_to_data(ast.body);
+      MapPanelDiag.render(context.extensionUri, dicItem, listTabsInfo);
+      vscode.commands.executeCommand(dicItem.command.command, dicItem);
+    }
+  );
+
+  context.subscriptions.push(copyVarVal);
+  context.subscriptions.push(displayDoc);
+  context.subscriptions.push(refreshAll);
+  context.subscriptions.push(clickOnVar);
+  context.subscriptions.push(openWorkDir);
+  context.subscriptions.push(updateWorkDir);
+  context.subscriptions.push(deleteDictionary);
+  context.subscriptions.push(commandAddDictionaries);
+  context.subscriptions.push(commandClickOnDicItem);
+  context.subscriptions.push(commandClickOnTable);
+  context.subscriptions.push(displayMapOnClick);
+  context.subscriptions.push(displayMapOnView);
+  context.subscriptions.push(displayDiagramPage);
+
+  vscode.window.registerTreeDataProvider("dic-list", dictionaryProvider);
+  vscode.window.registerTreeDataProvider("dic-tabs", dicTabProvider);
+  vscode.window.registerTreeDataProvider("dic-vars", dicTabVarProvider);
+  vscode.window.registerTreeDataProvider("dic-docs", docProvider);
+
+  return {
+    extendMarkdownIt(md: any) {
+      return md
+        .use(require("markdown-it-collapsible"))
+        .use(require("markdown-it-highlightjs"));
+    },
+  };
+}
+
+// This method is called when your extension is deactivated
+export function deactivate() {}

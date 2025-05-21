@@ -1,0 +1,250 @@
+{
+  "name": "f4data",
+  "displayName": "f4data",
+  "description": "",
+  "publisher": "yves0003",
+  "version": "0.0.2",
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "pricing": "Free",
+  "keywords": [
+    "sas",
+    "data",
+    "dictionary"
+  ],
+  "icon": "resources/icon/logo_128x128.png",
+  "categories": [
+    "Visualization"
+  ],
+  "badges": [
+    {
+      "href": "https://yveszendja.com",
+      "description": "badge version",
+      "url": "https://img.shields.io/badge/f4data-0.0.2-blue"
+    }
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:dic-explorer"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "markdown.markdownItPlugins": true,
+    "markdown.previewStyles": [
+      "./resources/style.css"
+    ],
+    "configuration": {
+      "title": "f4data",
+      "properties": {
+        "f4data.list": {
+          "type": "array",
+          "default": [],
+          "scope": "window",
+          "description": "list of dictionary",
+          "items": {
+            "type": "object",
+            "title": "dictionary",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the dictionary"
+              },
+              "link": {
+                "type": "string",
+                "description": "Link to the directory of the dictionary"
+              },
+              "file": {
+                "type": "string",
+                "description": "file name of the dictionary"
+              },
+              "work_dir": {
+                "type": "string",
+                "description": "Working directory where the dictionary can be used"
+              }
+            }
+          }
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "f4data.mapWebview",
+        "title": "Display Webview",
+        "icon": "$(link)"
+      },
+      {
+        "command": "f4data.addDictionaries",
+        "title": "Add many dictionaries",
+        "icon": "$(diff-added)"
+      },
+      {
+        "command": "f4data.refreshAll",
+        "title": "Refresh all",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "f4data.copyVarVal",
+        "title": "Copy",
+        "icon": "$(files)"
+      },
+      {
+        "command": "f4data.deleteAdict",
+        "title": "Delete"
+      },
+      {
+        "command": "f4data.updateWorkDir",
+        "title": "Update working directory"
+      },
+      {
+        "command": "f4data.openWorkDir",
+        "title": "Open working directory"
+      },
+      {
+        "command": "f4data.displayMap",
+        "title": "Display the mapping",
+        "icon": "$(info)"
+      },
+      {
+        "command": "f4data.clickOnVar",
+        "title": "Click on a variable"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "dic-explorer",
+          "title": "Dictionary_f4",
+          "icon": "$(diff-modified)"
+        }
+      ],
+      "panel": [
+        {
+          "id": "panel-Mapping",
+          "title": "Dictionary: Mapping",
+          "icon": "$(book)"
+        }
+      ]
+    },
+    "views": {
+      "panel-Mapping": [
+        {
+          "name": "Panel Dictionary",
+          "id": "mappingApanel",
+          "type": "webview",
+          "icon": ""
+        }
+      ],
+      "dic-explorer": [
+        {
+          "id": "dic-list",
+          "name": "Dictionaries",
+          "type": "tree",
+          "icon": ""
+        },
+        {
+          "id": "dic-tabs",
+          "name": "Tables",
+          "icon": ""
+        },
+        {
+          "id": "dic-vars",
+          "name": "Variables",
+          "icon": ""
+        },
+        {
+          "id": "dic-docs",
+          "name": "Help and documents",
+          "icon": ""
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "id": "dic-welcome",
+        "contents": "[Ajouter un dictionnaire](command:f4data.addDictionaries)",
+        "enablement": "config.list.length == 0 || config.list == undefined || config.list == null",
+        "view": "dic-explorer"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "f4data.refreshAll",
+          "when": "view == dic-list",
+          "group": "navigation@1"
+        },
+        {
+          "command": "f4data.refreshAll",
+          "when": "view == f4data.openview",
+          "group": "navigation@1"
+        },
+        {
+          "command": "f4data.addDictionaries",
+          "when": "view == dic-list",
+          "group": "navigation@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "when": "view == dic-list",
+          "command": "f4data.mapWebview",
+          "group": "inline@1"
+        },
+        {
+          "when": "view == dic-vars",
+          "command": "f4data.copyVarVal",
+          "group": "inline@2"
+        },
+        {
+          "when": "view == dic-list",
+          "command": "f4data.deleteAdict",
+          "group": "2_delete"
+        },
+        {
+          "when": "view == dic-list",
+          "command": "f4data.updateWorkDir",
+          "group": "1_delete"
+        },
+        {
+          "when": "view == dic-list",
+          "command": "f4data.openWorkDir",
+          "group": "1_delete"
+        },
+        {
+          "when": "view == dic-vars && viewItem == parent_with_map",
+          "command": "f4data.displayMap",
+          "group": "inline@1"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test",
+    "start:webview": "cd web && npm run start",
+    "build:webview": "cd web && npm run build"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.16",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.99.0",
+    "@typescript-eslint/eslint-plugin": "^8.28.0",
+    "@typescript-eslint/parser": "^8.28.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "eslint": "^9.23.0",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "csv-parse": "^5.6.0",
+    "lodash": "^4.17.21",
+    "markdown-it-collapsible": "^2.0.2",
+    "markdown-it-highlightjs": "^4.2.0"
+  }
+}
