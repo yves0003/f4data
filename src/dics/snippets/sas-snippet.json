@@ -1,0 +1,22 @@
+{
+  "SAS Basic Step": {
+    "prefix": "sasstep",
+    "body": [
+      "data ${1:dataset};",
+      "  set ${2:source};",
+      "  ${3:/* transformations */}",
+      "run;"
+    ],
+    "description": "Basic SAS data step"
+  },
+  "SAS libname rds": {
+    "prefix": "wps_lib_00",
+    "body": [
+      "libname test 'test/yves/run';",
+      "libname test1 'test/yves/run';",
+      "libname test2 'test/yves/run';",
+      "libname test3 'test/yves/run';",
+      "libname test4 'test/yves/run';"
+    ]
+  }
+}

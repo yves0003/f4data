@@ -21,6 +21,7 @@ import { OutputTable } from "./helpers/ast_to_data";
 import { DocProvider } from "./providers/docProvider";
 import { MapProvider } from "./providers/mapProvider";
 import { MapPanelDiag } from "./panels/mapPanel";
+import { completionItemProvider } from "./providers/completionItemProvider";
 
 const parser = new Parser();
 interface State {
@@ -102,6 +103,11 @@ export async function activate(context: vscode.ExtensionContext) {
         return;
       }
       const list_dics = await getFilesByExtension(state.link, "rd");
+      const list_snippet = await getFilesByExtension(state.link, "json");
+      const snippetlink = list_snippet.find((e) =>
+        e.filename.toLowerCase().includes("sas")
+      );
+
       const savedDictionaries = config.get("list") as listDico;
 
       for (const dict of list_dics) {
@@ -112,6 +118,11 @@ export async function activate(context: vscode.ExtensionContext) {
           true
         );
       }
+
+      if (snippetlink) {
+        await config.update("snippetPath", snippetlink.filePath, true);
+      }
+
       dictionaryProvider.refresh();
     }
   );
@@ -127,7 +138,6 @@ export async function activate(context: vscode.ExtensionContext) {
       const textFile = await extractTextFromFile(selectDicLink);
       const ast = parser.parse(textFile);
       const listTabsInfo = ast_to_data(ast.body);
-      console.log(listTabsInfo);
       dicTabProvider.setLink(path.dirname(selectDicLink || ""));
       dicTabProvider.setData(
         listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name))
@@ -289,11 +299,20 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(displayMapOnClick);
   context.subscriptions.push(displayMapOnView);
   context.subscriptions.push(displayDiagramPage);
+  context.subscriptions.push(completionItemProvider(context));
 
   vscode.window.registerTreeDataProvider("dic-list", dictionaryProvider);
   vscode.window.registerTreeDataProvider("dic-tabs", dicTabProvider);
   vscode.window.registerTreeDataProvider("dic-vars", dicTabVarProvider);
   vscode.window.registerTreeDataProvider("dic-docs", docProvider);
+
+  vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration("f4data.snippetPath")) {
+      vscode.window.showInformationMessage(
+        "SAS snippet path updated. Please reload the window to apply."
+      );
+    }
+  });
 
   return {
     extendMarkdownIt(md: any) {

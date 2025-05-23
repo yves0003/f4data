@@ -103,7 +103,6 @@ export async function validateNameIsUnique(name: string) {
 }
 
 export async function validateLinkExistOrIsUnique(link_sel: string) {
-  //const link = stringEscapeBack(link_sel);
   const link = link_sel;
   const isUrl = isValidURL(link);
   if (!isUrl) {
@@ -117,8 +116,8 @@ export async function validateLinkExistOrIsUnique(link_sel: string) {
         ? `Link is already assign to ${findDic.name}`
         : undefined;
     } else {
-      console.log("The directory not exists", "existDir.helpers");
-      return "The directory not exists";
+      console.log("The directory not exists yves", "existDir.helpers");
+      return "The directory not exists toto";
     }
   } else {
     return "You entered an URL!!!";

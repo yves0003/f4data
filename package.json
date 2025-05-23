@@ -64,6 +64,11 @@
               }
             }
           }
+        },
+        "f4data.snippetPath": {
+          "type": "string",
+          "default": "",
+          "description": "Full path to your custom SAS snippet JSON file"
         }
       }
     },
