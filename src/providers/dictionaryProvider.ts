@@ -8,11 +8,15 @@ import {
   Event,
   env,
   Uri,
+  TreeView,
 } from "vscode";
 import { directoryExists, validateNameIsUnique } from "../helpers/helpers";
 
 export class Dictionary extends TreeItem {
-  constructor(label: string) {
+  constructor(
+    public readonly label: string,
+    public readonly parent?: Dictionary
+  ) {
     super(label);
   }
   iconPath = new ThemeIcon("database");
@@ -24,6 +28,7 @@ export class Dictionary extends TreeItem {
 }
 
 export class DictionaryProvider implements TreeDataProvider<Dictionary> {
+  private view?: TreeView<Dictionary>;
   data: Dictionary[];
   constructor() {
     const dictionaries = this.getDictionaryInfos();
@@ -64,6 +69,9 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
       }
     }
   }
+  getParent(element: Dictionary): Dictionary | undefined {
+    return element.parent;
+  }
   setData(): void {
     const dictionaries = this.getDictionaryInfos();
     if (dictionaries && dictionaries.length > 0) {
@@ -74,8 +82,18 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
       }
     }
   }
+  setView(view: TreeView<Dictionary>) {
+    this.view = view;
+  }
   refresh(): void {
     this._onDidChangeTreeData.fire();
+  }
+  revealItem(name: string) {
+    const item = this.data.find((i) => i.label === name);
+    if (item && this.view) {
+      const dic = new Dictionary(item.label);
+      this.view.reveal(dic, { select: true, focus: true });
+    }
   }
   on_item_clicked(item: Dictionary) {
     if (item?.label === undefined || "") {

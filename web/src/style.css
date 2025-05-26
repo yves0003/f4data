@@ -70,3 +70,6 @@ abbr,
 acronym {
   border: 0;
 }
+body {
+  overflow: hidden;
+}

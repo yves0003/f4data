@@ -14,7 +14,7 @@ import { find, indexOf as lodashIndexOf } from "lodash";
 import { Dictionary, DictionaryProvider } from "./providers/dictionaryProvider";
 import path from "path";
 import { Parser } from "./helpers/Parser";
-import { ast_to_data, EnumNode } from "./helpers/ast_to_data";
+import { ast_to_data, EnumNode, RefNode } from "./helpers/ast_to_data";
 import { DicTabProvider } from "./providers/dicTabProvider";
 import { DicTabVarProvider } from "./providers/dicTabVarProvider";
 import { OutputTable } from "./helpers/ast_to_data";
@@ -59,7 +59,18 @@ export async function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration("f4data");
   let selectedDic: OutputTable[] = [];
   let allMappDic: EnumNode[];
+  let listTabsInfo: {
+    tables: OutputTable[];
+    mappings: EnumNode[];
+    links: RefNode[];
+  } = { tables: [], mappings: [], links: [] };
+
   const dictionaryProvider = new DictionaryProvider();
+  const dicListView = vscode.window.createTreeView("dic-list", {
+    treeDataProvider: dictionaryProvider,
+  });
+  dictionaryProvider.setView(dicListView);
+
   const dicTabProvider = new DicTabProvider();
   const dicTabVarProvider = new DicTabVarProvider();
   const docProvider = new DocProvider();
@@ -137,7 +148,7 @@ export async function activate(context: vscode.ExtensionContext) {
       const selectDicLink = dictionaryProvider.on_item_clicked(dicItem);
       const textFile = await extractTextFromFile(selectDicLink);
       const ast = parser.parse(textFile);
-      const listTabsInfo = ast_to_data(ast.body);
+      listTabsInfo = ast_to_data(ast.body);
       dicTabProvider.setLink(path.dirname(selectDicLink || ""));
       dicTabProvider.setData(
         listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name))
@@ -165,6 +176,10 @@ export async function activate(context: vscode.ExtensionContext) {
         );
       } else {
         docProvider.setData([]);
+      }
+      dictionaryProvider.revealItem(dicItem.label);
+      if (MapPanelDiag.currentPanel) {
+        MapPanelDiag.render(context.extensionUri, dicItem, listTabsInfo);
       }
     }
   );
@@ -277,10 +292,11 @@ export async function activate(context: vscode.ExtensionContext) {
   const displayDiagramPage = vscode.commands.registerCommand(
     "f4data.mapWebview",
     async (dicItem: Dictionary) => {
-      const selectDicLink = dictionaryProvider.on_item_clicked(dicItem);
-      const textFile = await extractTextFromFile(selectDicLink);
-      const ast = parser.parse(textFile);
-      const listTabsInfo = ast_to_data(ast.body);
+      //const selectDicLink = dictionaryProvider.on_item_clicked(dicItem);
+      //const textFile = await extractTextFromFile(selectDicLink);
+      //const ast = parser.parse(textFile);
+      //listTabsInfo = ast_to_data(ast.body);
+      //listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name));
       MapPanelDiag.render(context.extensionUri, dicItem, listTabsInfo);
       vscode.commands.executeCommand(dicItem.command.command, dicItem);
     }
@@ -301,7 +317,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(displayDiagramPage);
   context.subscriptions.push(completionItemProvider(context));
 
-  vscode.window.registerTreeDataProvider("dic-list", dictionaryProvider);
+  //vscode.window.registerTreeDataProvider("dic-list", dictionaryProvider);
   vscode.window.registerTreeDataProvider("dic-tabs", dicTabProvider);
   vscode.window.registerTreeDataProvider("dic-vars", dicTabVarProvider);
   vscode.window.registerTreeDataProvider("dic-docs", docProvider);
