@@ -6,7 +6,7 @@ import {
   Uri,
   ViewColumn,
 } from "vscode";
-import { getUri, getUriWithHash } from "../utilities/getUri";
+import { getUriWithHash } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 import { EnumNode, OutputTable, RefNode } from "../helpers/ast_to_data";
 
@@ -20,8 +20,8 @@ import { EnumNode, OutputTable, RefNode } from "../helpers/ast_to_data";
  * - Setting the HTML (and by proxy CSS/JavaScript) content of the webview panel
  * - Setting message listeners so data can be passed between the webview and extension
  */
-export class MapPanelDiag {
-  public static currentPanel: MapPanelDiag | undefined;
+export class SearchPanelDiag {
+  public static currentPanel: SearchPanelDiag | undefined;
   private readonly _panel: WebviewPanel;
   private _disposables: Disposable[] = [];
   private static _listTabsInfo: {
@@ -34,8 +34,12 @@ export class MapPanelDiag {
     links: [],
   };
 
+  public getTitle() {
+    return this._panel.title || "";
+  }
+
   /**
-   * The MapPanelDiag class private constructor (called only from the render method).
+   * The SearchPanelDiag class private constructor (called only from the render method).
    *
    * @param panel A reference to the webview panel
    * @param extensionUri The URI of the directory containing the extension
@@ -57,9 +61,6 @@ export class MapPanelDiag {
     this._setWebviewMessageListener(this._panel.webview);
   }
 
-  public getTitle() {
-    return this._panel.title || "";
-  }
   /**
    * Renders the current webview panel if it exists otherwise a new webview panel
    * will be created and displayed.
@@ -69,14 +70,15 @@ export class MapPanelDiag {
   public static render(
     extensionUri: Uri,
     item: any,
-    listTabsInfo: typeof MapPanelDiag._listTabsInfo
+    listTabsInfo: typeof SearchPanelDiag._listTabsInfo
   ) {
     this._listTabsInfo = listTabsInfo;
-    if (MapPanelDiag.currentPanel) {
+    if (SearchPanelDiag.currentPanel) {
       // If the webview panel already exists reveal it
-      MapPanelDiag.currentPanel._panel.title = `graph : ${item.label}`;
-      MapPanelDiag.currentPanel._panel.reveal(ViewColumn.One);
-      MapPanelDiag.currentPanel._panel.webview.postMessage({
+      SearchPanelDiag.currentPanel._panel.title = `search : ${item.label}`;
+      SearchPanelDiag.currentPanel._panel.reveal(ViewColumn.One);
+      SearchPanelDiag.currentPanel._panel.webview.postMessage({
+        //2
         type: "refresh",
         payload: this._listTabsInfo,
       });
@@ -84,9 +86,9 @@ export class MapPanelDiag {
       // If a webview panel does not already exist create and show a new one
       const panel = window.createWebviewPanel(
         // Panel view type
-        "mapWebview",
+        "searchWebview",
         // Panel title
-        `graph : ${item.label}`,
+        `search : ${item.label}`,
         // The editor column the panel should be displayed in
         ViewColumn.One,
         {
@@ -94,11 +96,11 @@ export class MapPanelDiag {
           retainContextWhenHidden: true,
           localResourceRoots: [
             Uri.joinPath(extensionUri, "out"),
-            Uri.joinPath(extensionUri, "web/build"),
+            Uri.joinPath(extensionUri, "web_search/build"),
           ],
         }
       );
-      MapPanelDiag.currentPanel = new MapPanelDiag(panel, extensionUri);
+      SearchPanelDiag.currentPanel = new SearchPanelDiag(panel, extensionUri);
     }
   }
 
@@ -106,7 +108,7 @@ export class MapPanelDiag {
    * Cleans up and disposes of webview resources when the webview panel is closed.
    */
   public dispose() {
-    MapPanelDiag.currentPanel = undefined;
+    SearchPanelDiag.currentPanel = undefined;
 
     // Dispose of the current webview panel
     this._panel.dispose();
@@ -134,14 +136,14 @@ export class MapPanelDiag {
   private _getWebviewContent(webview: Webview, extensionUri: Uri) {
     // The CSS file from the React build output
     const stylesUri = getUriWithHash(webview, extensionUri, [
-      "web",
+      "web_search",
       "build",
       "assets",
       "index.css",
     ]);
     // The JS file from the React build output
     const scriptUri = getUriWithHash(webview, extensionUri, [
-      "web",
+      "web_search",
       "build",
       "assets",
       "index.js",
@@ -156,9 +158,9 @@ export class MapPanelDiag {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
-          <title>Hello World</title>
+          <title>Hello World2</title>
         </head>
         <body>
           <div id="app"></div>
@@ -192,7 +194,7 @@ export class MapPanelDiag {
           this._panel.webview.postMessage({
             //2
             type: "init",
-            payload: MapPanelDiag._listTabsInfo,
+            payload: SearchPanelDiag._listTabsInfo,
           });
         }
       },
