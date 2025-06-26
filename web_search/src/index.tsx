@@ -180,7 +180,8 @@ const App = () => {
         });
       });
     };
-  }, [selectedTab]);
+    // }, [selectedTab]);
+  }, []);
   return (
     <>
       {import.meta.env.DEV ? <vscode-dev-toolbar></vscode-dev-toolbar> : null}
@@ -253,7 +254,8 @@ const App = () => {
                   ? alldata.filter((data) => !data.path.includes("link"))
                   : alldata.filter((data) =>
                       tab.label === "Tables"
-                        ? data.path.includes("table")
+                        ? data.path.includes("table") &&
+                          !data.path.includes("variables")
                         : tab.label === "Vars"
                         ? data.path.includes("variables")
                         : tab.label === "Mappings"
@@ -303,13 +305,13 @@ const App = () => {
   );
 };
 function uniVal(val?: string, search?: resSearch["matches"][0]) {
-  if (val === "Tables") return "Tables";
   if (val === "Vars") return "Vars";
+  if (val === "Tables") return "Tables";
   if (val === "Mappings") return "Mappings";
   if (val === "Tous") {
     if (search) {
-      if (search.path.includes("table")) return "Tables";
       if (search.path.includes("variables")) return "Vars";
+      if (search.path.includes("table")) return "Tables";
       if (search.path.includes("members")) return "Mappings";
       if (search.path.includes("enum")) return "Mappings";
     }
@@ -322,8 +324,8 @@ function getIcon(val?: string, search?: resSearch["matches"][0]) {
   if (val === undefined) return "all";
   if (val === "Tous") {
     if (search) {
-      if (search.path.includes("table")) return "tables";
       if (search.path.includes("variables")) return "vars";
+      if (search.path.includes("table")) return "tables";
       if (search.path.includes("members")) return "maps";
       if (search.path.includes("enum")) return "maps";
     }
