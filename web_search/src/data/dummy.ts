@@ -194,7 +194,7 @@ export const dummy = [
           {
             _id: "2-3",
             name: "list_users",
-            desc: "",
+            desc: "liste des utilisateurs de l'atelier",
             type: "varchar",
             cle: false,
             color: "lightgrey",

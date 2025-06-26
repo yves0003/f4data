@@ -25,7 +25,101 @@ export function searchWithHighlights(
 
   const highlightMatch = (text: string): string => {
     if (!searchTerm) {
-      return text;
+      return "";
+    }
+
+    const lowerText = text.toLowerCase();
+    const lowerSearch = searchTerm.toLowerCase();
+    const searchLen = searchTerm.length;
+
+    const matchIndex = lowerText.indexOf(lowerSearch);
+    if (matchIndex === -1) {
+      return "";
+    } // No match
+
+    // Define raw window
+    let windowStart = Math.max(0, matchIndex - 10);
+    let windowEnd = Math.min(text.length, matchIndex + 50);
+
+    // Adjust to strip partial words at boundaries
+    // Move start forward to the next space (if not already at a word boundary)
+    if (windowStart > 0 && /\S/.test(text[windowStart - 1])) {
+      while (windowStart < text.length && /\S/.test(text[windowStart])) {
+        windowStart++;
+      }
+    }
+
+    // Move end backward to the previous space (if not at a word boundary)
+    if (windowEnd < text.length && /\S/.test(text[windowEnd])) {
+      while (windowEnd > windowStart && /\S/.test(text[windowEnd - 1])) {
+        windowEnd--;
+      }
+    }
+
+    const windowText = text.slice(windowStart, windowEnd);
+    const windowTextLower = lowerText.slice(windowStart, windowEnd);
+
+    // Highlight matches within window
+    let result = "";
+    let i = 0;
+
+    while (i < windowText.length) {
+      const chunk = windowTextLower.slice(i, i + searchLen);
+      if (chunk === lowerSearch) {
+        result += `<mark>${windowText.slice(i, i + searchLen)}</mark>`;
+        i += searchLen;
+      } else {
+        result += windowText[i];
+        i++;
+      }
+    }
+
+    const prefix = windowStart > 0 ? "…" : "";
+    const suffix = windowEnd < text.length ? "…" : "";
+
+    return `${prefix}${result}${suffix}`;
+  };
+
+  const highlightMatch_limit = (text: string): string => {
+    if (!searchTerm) {
+      return "";
+    }
+
+    const lowerText = text.toLowerCase();
+    const lowerSearch = searchTerm.toLowerCase();
+    const searchLen = searchTerm.length;
+
+    const matchIndex = lowerText.indexOf(lowerSearch);
+    if (matchIndex === -1) {
+      return "";
+    } // No match
+
+    // Define window: 10 chars before match, 50 chars after match start
+    const windowStart = Math.max(0, matchIndex - 10);
+    const windowEnd = Math.min(text.length, matchIndex + 50);
+
+    const result: string[] = [];
+    let i = windowStart;
+
+    while (i < windowEnd) {
+      const currentChunk = lowerText.substring(i, i + searchLen);
+      if (currentChunk === lowerSearch) {
+        result.push("<mark>", text.substr(i, searchLen), "</mark>");
+        i += searchLen;
+      } else {
+        result.push(text[i]);
+        i++;
+      }
+    }
+
+    return `${windowStart > 0 ? "…" : ""}${result.join("")}${
+      windowEnd < text.length ? "…" : ""
+    }`;
+  };
+
+  const highlightMatch_old = (text: string): string => {
+    if (!searchTerm) {
+      return "";
     }
 
     const lowerSearch = searchTerm.toLowerCase();

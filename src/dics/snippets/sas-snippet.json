@@ -17,6 +17,7 @@
       "libname test2 'test/yves/run';",
       "libname test3 'test/yves/run';",
       "libname test4 'test/yves/run';"
-    ]
+    ],
+    "description": "liste de toutes les librairies du rds"
   }
 }

@@ -197,9 +197,13 @@ const App = () => {
             onChange={(e) => {
               e.preventDefault();
               setSearchQuery(e.target.value);
-              let res = searchWithHighlights(allData, e.target.value);
-              //let res = searchWithHighlights(payload, e.target.value);
-              setAlldata(res.matches);
+              if (import.meta.env.DEV) {
+                let res = searchWithHighlights(allData, e.target.value);
+                setAlldata(res.matches);
+              } else {
+                let res = searchWithHighlights(payload, e.target.value);
+                setAlldata(res.matches);
+              }
             }}
           />
           <TabButtonContainer
