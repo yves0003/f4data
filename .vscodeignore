@@ -6,6 +6,16 @@ src/**
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/eslint.config.mjs
+**/vite.config.js
 **/*.map
 **/*.ts
 **/.vscode-test.*
+**/node_modules/**
+**/src/**
+**/*.ts
+.vscode/
+web/package*
+web/.eslintrc*
+web_search/package*
+web_search/.eslintrc*
+web_search/*.txt
