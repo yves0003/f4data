@@ -10,7 +10,7 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
-**/node_modules/**
+#**/node_modules/**
 **/src/**
 **/*.ts
 .vscode/
@@ -19,3 +19,5 @@ web/.eslintrc*
 web_search/package*
 web_search/.eslintrc*
 web_search/*.txt
+web_search/node_modules
+web/node_modules

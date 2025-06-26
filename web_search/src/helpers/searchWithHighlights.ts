@@ -18,9 +18,54 @@ export function searchWithHighlights(
   const matches: SearchMatch[] = [];
 
   // Helper function to highlight matches in text
-  const highlightMatch = (text: string): string => {
+  const highlightMatch2 = (text: string): string => {
     const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, "gi");
     return text.replace(regex, "<mark>$1</mark>");
+  };
+
+  const highlightMatch = (text: string): string => {
+    if (!searchTerm) {
+      return text;
+    }
+
+    const lowerSearch = searchTerm.toLowerCase();
+    const searchLen = searchTerm.length;
+
+    // Limit scan length (max 50 characters after first match)
+    const maxLengthToScan = 50;
+
+    const result: string[] = [];
+    let matchFound = false;
+    let i = 0;
+
+    const textLen = text.length;
+    const scanLimit = Math.min(textLen, maxLengthToScan);
+
+    while (i < textLen) {
+      const currentChunk = text.substring(i, i + searchLen);
+
+      if (currentChunk.toLowerCase() === lowerSearch) {
+        result.push("<mark>", text.substring(i, i + searchLen), "</mark>");
+        i += searchLen;
+        matchFound = true;
+      } else {
+        result.push(text[i]);
+        i++;
+      }
+
+      // After first match and 50 chars processed, exit early
+      if (matchFound && i >= scanLimit) {
+        result.push(text.slice(i)); // append rest of text unprocessed
+        break;
+      }
+    }
+
+    // If we didn’t break early, append remaining unprocessed text
+    if (!matchFound || i < textLen) {
+      result.push(text.slice(i));
+    }
+
+    return result.join("");
   };
 
   // Helper to escape regex special characters
@@ -37,7 +82,6 @@ export function searchWithHighlights(
         // Check table name
         if (table.name.toLowerCase().includes(lowerSearchTerm)) {
           matches.push({
-            //path: [table._id, "table"],
             path: [table.name, "table"],
             field: "name",
             value: table.name,
@@ -49,7 +93,6 @@ export function searchWithHighlights(
         // Check table description
         if (table.description.toLowerCase().includes(lowerSearchTerm)) {
           matches.push({
-            //path: [table._id, "table"],
             path: [table.name, "table"],
             field: "description",
             value: table.description,
