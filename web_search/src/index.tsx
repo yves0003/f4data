@@ -145,6 +145,11 @@ const App = () => {
   const [selectedTab, setSelectedTab] = useState<string>("0");
   const [alldata, setAlldata] = useState<resSearch["matches"]>();
   const [payload, setPayload] = useState<listTabsInfo[]>([]);
+  const [nbAll, setNbAll] = useState<number>(0);
+  const [nbTables, setNbTables] = useState<number>(0);
+  const [nbVars, setNbVars] = useState<number>(0);
+  const [nbMap, setNbMap] = useState<number>(0);
+
   useEffect(() => {
     const handleMessage = (
       event: MessageEvent<{
@@ -200,9 +205,17 @@ const App = () => {
               if (import.meta.env.DEV) {
                 let res = searchWithHighlights(allData, e.target.value);
                 setAlldata(res.matches);
+                setNbAll(getNumberFilter(res.matches));
+                setNbMap(getNumberFilter(res.matches, "Mappings"));
+                setNbTables(getNumberFilter(res.matches, "Tables"));
+                setNbVars(getNumberFilter(res.matches, "Vars"));
               } else {
                 let res = searchWithHighlights(payload, e.target.value);
                 setAlldata(res.matches);
+                setNbAll(getNumberFilter(res.matches));
+                setNbMap(getNumberFilter(res.matches, "Mappings"));
+                setNbTables(getNumberFilter(res.matches, "Tables"));
+                setNbVars(getNumberFilter(res.matches, "Vars"));
               }
             }}
           />
@@ -238,7 +251,10 @@ const App = () => {
                   width={"1rem"}
                   height={"1rem"}
                 />
-                <span className="focus">{tab.label}</span>
+                <span className="focus">{`${tab.label}`}</span>
+                <span style={{ fontSize: "0.6rem" }}>
+                  {displayNumber(listIcons[i], nbAll, nbTables, nbVars, nbMap)}
+                </span>
               </TabButtonElt>
             ))}
           </TabButtonContainer>
@@ -308,6 +324,51 @@ const App = () => {
     </>
   );
 };
+
+function displayNumber(
+  filter: string,
+  nbAll: number,
+  nbTables: number,
+  nbVars: number,
+  nbMap: number
+) {
+  let number = nbAll;
+  if (number <= 0) {
+    return "";
+  } else {
+    if (filter === "tables") {
+      number = nbTables;
+    }
+    if (filter === "vars") {
+      number = nbVars;
+    }
+    if (filter === "maps") {
+      number = nbMap;
+    }
+    return `(${number})`;
+  }
+}
+function getNumberFilter(
+  alldata: resSearch["matches"],
+  filter?: "Tables" | "Vars" | "Mappings"
+): number {
+  const data = alldata.filter((data) => !data.path.includes("link"));
+  if (filter === "Tables") {
+    return data.filter(
+      (data) => data.path.includes("table") && !data.path.includes("variables")
+    ).length;
+  }
+  if (filter === "Vars") {
+    return data.filter((data) => data.path.includes("variables")).length;
+  }
+  if (filter === "Mappings") {
+    return data.filter(
+      (data) => data.path.includes("members") || data.path.includes("enum")
+    ).length;
+  }
+  return data.length;
+}
+
 function uniVal(val?: string, search?: resSearch["matches"][0]) {
   if (val === "Vars") return "Vars";
   if (val === "Tables") return "Tables";

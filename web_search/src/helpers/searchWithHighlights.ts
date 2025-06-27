@@ -24,7 +24,7 @@ export function searchWithHighlights(
   };
 
   const highlightMatch = (text: string): string => {
-    if (!searchTerm) {
+    if (!searchTerm || searchTerm === "") {
       return "";
     }
 
@@ -165,6 +165,13 @@ export function searchWithHighlights(
   // Helper to escape regex special characters
   function escapeRegExp(string: string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  if (lowerSearchTerm === "") {
+    return {
+      results: [],
+      matches: [],
+    };
   }
 
   const results = data
