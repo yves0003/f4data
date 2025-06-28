@@ -116,7 +116,6 @@ export async function validateLinkExistOrIsUnique(link_sel: string) {
         ? `Link is already assign to ${findDic.name}`
         : undefined;
     } else {
-      console.log("The directory not exists yves", "existDir.helpers");
       return "The directory not exists toto";
     }
   } else {

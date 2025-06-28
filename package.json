@@ -3,7 +3,7 @@
   "displayName": "f4data",
   "description": "",
   "publisher": "yves0003",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -21,7 +21,7 @@
     {
       "href": "https://yveszendja.com",
       "description": "badge version",
-      "url": "https://img.shields.io/badge/f4data-0.1.4-blue"
+      "url": "https://img.shields.io/badge/f4data-0.1.6-blue"
     }
   ],
   "activationEvents": [
@@ -69,6 +69,10 @@
           "type": "string",
           "default": "",
           "description": "Full path to your custom SAS snippet JSON file"
+        },
+        "f4data.listEmpty": {
+          "type": "boolean",
+          "default": true
         }
       }
     },
@@ -172,9 +176,9 @@
     "viewsWelcome": [
       {
         "id": "dic-welcome",
-        "contents": "[Ajouter un dictionnaire](command:f4data.addDictionaries)",
-        "enablement": "config.list.length == 0 || config.list == undefined || config.list == null",
-        "view": "dic-explorer"
+        "contents": "👋 Bienvenue sur f4data.\nSélectionner le répertoire du dictionnaire que vous souhaitez afficher.\n[Ajouter un dictionnaire](command:f4data.addDictionaries)",
+        "when": "config.f4data.listEmpty",
+        "view": "dic-list"
       }
     ],
     "menus": {

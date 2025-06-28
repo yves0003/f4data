@@ -23,6 +23,7 @@ import { MapProvider } from "./providers/mapProvider";
 import { MapPanelDiag } from "./panels/mapPanel";
 import { completionItemProvider } from "./providers/completionItemProvider";
 import { SearchPanelDiag } from "./panels/searchPanel";
+import { updateContextBasedOnConfig } from "./utilities/updateContextBasedOnConfig";
 
 const parser = new Parser();
 interface State {
@@ -58,6 +59,7 @@ const upsert = function (
 
 export async function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration("f4data");
+  updateContextBasedOnConfig(config);
   let selectedDic: OutputTable[] = [];
   let allMappDic: EnumNode[];
   let listTabsInfo: {
@@ -349,6 +351,9 @@ export async function activate(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage(
         "SAS snippet path updated. Please reload the window to apply."
       );
+    }
+    if (e.affectsConfiguration("f4data.list")) {
+      updateContextBasedOnConfig(config);
     }
   });
 

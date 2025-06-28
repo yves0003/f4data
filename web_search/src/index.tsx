@@ -161,6 +161,10 @@ const App = () => {
         setPayload([event.data.payload]);
         setAlldata([]);
         setSearchQuery("");
+        setNbAll(0);
+        setNbMap(0);
+        setNbTables(0);
+        setNbVars(0);
       }
     };
     window.addEventListener("message", handleMessage);
