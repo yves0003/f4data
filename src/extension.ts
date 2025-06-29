@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
-import { addDictionaries } from "./commands/addDictionaries";
+import {
+  addAllDictionaries,
+  addDictionaries,
+} from "./commands/addDictionaries";
 import {
   AddInfoTitleView,
   extractTextFromFile,
@@ -105,14 +108,15 @@ export async function activate(context: vscode.ExtensionContext) {
     async () => {
       // The code you place here will be executed every time your command is executed
       const state = {} as Partial<State>;
-      state.link = await addDictionaries({
-        title: "Create a new dictionary",
-        value: "",
-        placeholder: "Choose a link",
-        prompt: "Choose a link",
-        validate: validateLinkExistOrIsUnique,
-        shouldResume: shouldResume,
-      });
+      state.link = await addAllDictionaries();
+      // state.link = await addDictionaries({
+      //   title: "Create a new dictionary",
+      //   value: "",
+      //   placeholder: "Choose a link",
+      //   prompt: "Choose a link",
+      //   validate: validateLinkExistOrIsUnique,
+      //   shouldResume: shouldResume,
+      // });
       if (!state.link) {
         return;
       }
@@ -248,6 +252,15 @@ export async function activate(context: vscode.ExtensionContext) {
       docProvider.setData([]);
       title_var.setTitle(`Variables`);
       title_tab.setTitle("Tables");
+      if (MapPanelDiag.currentPanel?.getTitle() === `graph : ${item.label}`) {
+        MapPanelDiag.currentPanel?.dispose();
+      }
+      if (
+        SearchPanelDiag.currentPanel?.getTitle() === `search : ${item.label}`
+      ) {
+        SearchPanelDiag.currentPanel?.dispose();
+      }
+
       //mapProvider.updateContent([], "");
     }
   );
@@ -308,7 +321,6 @@ export async function activate(context: vscode.ExtensionContext) {
       vscode.commands.executeCommand(dicItem.command.command, dicItem);
     }
   );
-
   const displaySearchPage = vscode.commands.registerCommand(
     "f4data.searchWebview",
     async (dicItem: Dictionary) => {

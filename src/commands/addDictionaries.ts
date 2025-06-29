@@ -44,6 +44,24 @@ export function addDictionariesn(state: Partial<State>): Promise<string> {
   });
 }
 
+export async function addAllDictionaries() {
+  try {
+    const dir = await vscode.window.showOpenDialog({
+      canSelectFiles: false,
+      canSelectFolders: true,
+      canSelectMany: false,
+      openLabel: "Sélectionner",
+    });
+    if (dir) {
+      return dir[0].path;
+    } else {
+      return undefined;
+    }
+  } catch (error) {
+    window.showErrorMessage("error.addDictionaries");
+  }
+}
+
 export async function addDictionaries<P extends InputBoxParameters>({
   title,
   value,

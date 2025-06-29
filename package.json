@@ -3,7 +3,7 @@
   "displayName": "f4data",
   "description": "",
   "publisher": "yves0003",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -21,7 +21,7 @@
     {
       "href": "https://yveszendja.com",
       "description": "badge version",
-      "url": "https://img.shields.io/badge/f4data-0.1.6-blue"
+      "url": "https://img.shields.io/badge/f4data-0.1.7-blue"
     }
   ],
   "activationEvents": [
