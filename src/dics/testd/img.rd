@@ -30,53 +30,6 @@ table test.ateliers as test {
 	date timestamp
 	#test de mesure
 	List_Users varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
-	list_users2 varchar
 }
 
 ref : ateliers.list_users > users.id

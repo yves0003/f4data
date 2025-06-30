@@ -289,7 +289,7 @@ const App = () => {
                     )
                 ).map((val) => (
                   <ResContainer>
-                    <ResDetail>
+                    <ResDetail title={val.value}>
                       <Icons
                         stroke="var(--vscode-input-foreground)"
                         icon={getIcon(tab.label, val) as any}
