@@ -66,10 +66,11 @@ export async function activate(context: vscode.ExtensionContext) {
   let selectedDic: OutputTable[] = [];
   let allMappDic: EnumNode[];
   let listTabsInfo: {
+    name: string;
     tables: OutputTable[];
     mappings: EnumNode[];
     links: RefNode[];
-  } = { tables: [], mappings: [], links: [] };
+  } = { name: "", tables: [], mappings: [], links: [] };
 
   const dictionaryProvider = new DictionaryProvider();
   const dicListView = vscode.window.createTreeView("dic-list", {
@@ -92,7 +93,7 @@ export async function activate(context: vscode.ExtensionContext) {
     "f4data.refreshAll",
     async () => {
       vscode.window.showInformationMessage("Actualisé!!!!");
-      //dictionaryProvider.setData();
+      listTabsInfo.name = "";
       dicTabProvider.setData([]);
       dicTabVarProvider.setData([]);
       docProvider.setData([]);
@@ -148,46 +149,48 @@ export async function activate(context: vscode.ExtensionContext) {
     "f4data.clickOnDicItem",
     async (dicItem: Dictionary) => {
       //vscode.commands.executeCommand("f4data.refreshAll");
-      dicTabProvider.setData([]);
-      dicTabVarProvider.setData([]);
-      docProvider.setData([]);
-      mapProvider.setDataAndUpdateContent([], "");
-      const selectDicLink = dictionaryProvider.on_item_clicked(dicItem);
-      const textFile = await extractTextFromFile(selectDicLink);
-      const ast = parser.parse(textFile);
-      listTabsInfo = ast_to_data(ast.body);
-      dicTabProvider.setLink(path.dirname(selectDicLink || ""));
-      dicTabProvider.setData(
-        listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name))
-      );
-      title_tab.setTitle(
-        `Tables${
-          listTabsInfo.tables.length > 0
-            ? ` (${listTabsInfo.tables.length})`
-            : ""
-        }`
-      );
-      title_var.setTitle(`Variables`);
-      selectedDic = listTabsInfo.tables;
-      allMappDic = listTabsInfo.mappings;
-
-      const docFolder = findMatchingDirectory(
-        path.dirname(selectDicLink || ""),
-        ["documents", "docs", "doc", "document"],
-        { caseSensitive: false }
-      );
-      if (docFolder) {
-        const listDocs = await getAllMarkdownFiles(docFolder);
-        docProvider.setData(
-          listDocs.sort((a, b) => a.filename.localeCompare(b.filename))
-        );
-      } else {
+      if (listTabsInfo.name !== dicItem.label) {
+        dicTabProvider.setData([]);
+        dicTabVarProvider.setData([]);
         docProvider.setData([]);
+        mapProvider.setDataAndUpdateContent([], "");
+        const selectDicLink = dictionaryProvider.on_item_clicked(dicItem);
+        const textFile = await extractTextFromFile(selectDicLink);
+        const ast = parser.parse(textFile);
+        listTabsInfo = ast_to_data(ast.body, dicItem.label);
+        dicTabProvider.setLink(path.dirname(selectDicLink || ""));
+        dicTabProvider.setData(
+          listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name))
+        );
+        title_tab.setTitle(
+          `Tables${
+            listTabsInfo.tables.length > 0
+              ? ` (${listTabsInfo.tables.length})`
+              : ""
+          }`
+        );
+        title_var.setTitle(`Variables`);
+        selectedDic = listTabsInfo.tables;
+        allMappDic = listTabsInfo.mappings;
+
+        const docFolder = findMatchingDirectory(
+          path.dirname(selectDicLink || ""),
+          ["documents", "docs", "doc", "document"],
+          { caseSensitive: false }
+        );
+        if (docFolder) {
+          const listDocs = await getAllMarkdownFiles(docFolder);
+          docProvider.setData(
+            listDocs.sort((a, b) => a.filename.localeCompare(b.filename))
+          );
+        } else {
+          docProvider.setData([]);
+        }
+        dictionaryProvider.revealItem(dicItem.label);
+        // if (MapPanelDiag.currentPanel) {
+        //   MapPanelDiag.render(context.extensionUri, dicItem, listTabsInfo);
+        // }
       }
-      dictionaryProvider.revealItem(dicItem.label);
-      // if (MapPanelDiag.currentPanel) {
-      //   MapPanelDiag.render(context.extensionUri, dicItem, listTabsInfo);
-      // }
     }
   );
   const commandClickOnTable = vscode.commands.registerCommand(

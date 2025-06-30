@@ -6,7 +6,6 @@ import {
   TreeItem,
   TreeItemCollapsibleState,
 } from "vscode";
-import { addSlashEnd, checkFileExistsSync } from "../helpers/helpers";
 
 class Variables extends TreeItem {
   docLink: string = "";

@@ -17,6 +17,7 @@ export type EnumNode = {
   type: "Enum";
   name: string;
   members: MemberNode[];
+  table?: string;
 };
 
 export type RefNode = {
@@ -96,8 +97,14 @@ function isRefNode(node: ASTNodeType): node is RefNode {
 }
 
 export const ast_to_data = (
-  input: AST["body"]
-): { tables: OutputTable[]; mappings: EnumNode[]; links: RefNode[] } => {
+  input: AST["body"],
+  name = ""
+): {
+  name: string;
+  tables: OutputTable[];
+  mappings: EnumNode[];
+  links: RefNode[];
+} => {
   let lastDefinition = "";
   let tableCount = 0;
   const result: OutputTable[] = [];
@@ -131,8 +138,11 @@ export const ast_to_data = (
           const prevElt = item.body[prevIndexOrig];
           let lastDefVar =
             prevElt && prevElt.type === "Definition" ? prevElt.value || "" : "";
-          let hasMapping = allMapping.find(
-            (e) => e.name.toLowerCase() === variable.name
+          let hasMapping = allMapping.find((e) =>
+            e.table
+              ? e.name.toLowerCase() === variable.name.toLowerCase() &&
+                e.table.toLowerCase() === item.name.toLowerCase()
+              : e.name.toLowerCase() === variable.name.toLowerCase()
           )
             ? true
             : false;
@@ -165,5 +175,5 @@ export const ast_to_data = (
       tableCount++;
     }
   });
-  return { tables: result, mappings: allMapping, links: allRef };
+  return { name, tables: result, mappings: allMapping, links: allRef };
 };

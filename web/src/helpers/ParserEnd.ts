@@ -439,7 +439,6 @@ export class Parser {
     //   }
     // } else {
     //   if (token.type !== tokenType) {
-    //     console.log(token);
     //     throw new SyntaxError(`Expected: "${tokenType || "null"}", got ${token.type as string}`);
     //   }
     // }
