@@ -1,13 +1,14 @@
 import { createRoot } from "react-dom/client";
 import "./style.css";
 import styled from "styled-components";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import handleKeyDown from "./helpers/handleKeyDown";
 import { dummy } from "./data/dummy";
 import { searchWithHighlights } from "./helpers/searchWithHighlights";
 import TabButtonElt from "./components/TabButtonElt";
 import { Icons } from "./components/icons";
 import { vscode } from "./helpers/vscode";
+import { debounce } from "lodash";
 
 const allData: listTabsInfo[] = dummy as listTabsInfo[];
 let listIcons = ["all", "tables", "vars", "maps"];
@@ -150,6 +151,25 @@ const App = () => {
   const [nbVars, setNbVars] = useState<number>(0);
   const [nbMap, setNbMap] = useState<number>(0);
 
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((term: string, allData: listTabsInfo[]) => {
+        const res = searchWithHighlights(allData, term);
+        setAlldata(res.matches);
+        setNbAll(getNumberFilter(res.matches));
+        setNbMap(getNumberFilter(res.matches, "Mappings"));
+        setNbTables(getNumberFilter(res.matches, "Tables"));
+        setNbVars(getNumberFilter(res.matches, "Vars"));
+      }, 300), // Adjust delay as needed
+    []
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
+
   useEffect(() => {
     const handleMessage = (
       event: MessageEvent<{
@@ -189,7 +209,6 @@ const App = () => {
         });
       });
     };
-    // }, [selectedTab]);
   }, []);
   return (
     <>
@@ -207,19 +226,9 @@ const App = () => {
               e.preventDefault();
               setSearchQuery(e.target.value);
               if (import.meta.env.DEV) {
-                let res = searchWithHighlights(allData, e.target.value);
-                setAlldata(res.matches);
-                setNbAll(getNumberFilter(res.matches));
-                setNbMap(getNumberFilter(res.matches, "Mappings"));
-                setNbTables(getNumberFilter(res.matches, "Tables"));
-                setNbVars(getNumberFilter(res.matches, "Vars"));
+                debouncedSearch(e.target.value, allData);
               } else {
-                let res = searchWithHighlights(payload, e.target.value);
-                setAlldata(res.matches);
-                setNbAll(getNumberFilter(res.matches));
-                setNbMap(getNumberFilter(res.matches, "Mappings"));
-                setNbTables(getNumberFilter(res.matches, "Tables"));
-                setNbVars(getNumberFilter(res.matches, "Vars"));
+                debouncedSearch(e.target.value, payload);
               }
             }}
           />
@@ -287,8 +296,8 @@ const App = () => {
                           data.path.includes("enum")
                         : undefined
                     )
-                ).map((val) => (
-                  <ResContainer>
+                ).map((val, i) => (
+                  <ResContainer key={val.highlighted + val.value + i}>
                     <ResDetail title={val.value}>
                       <Icons
                         stroke="var(--vscode-input-foreground)"

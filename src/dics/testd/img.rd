@@ -37,6 +37,7 @@ ref : ateliers.id <> users.id
 ref : yves.id <> users.'test id'
 
 enum ateliers.List_Users {
+0 : Origination [note: '']
 1 : status at the beginning of the process [note: 'Waiting to be processed']
 2 : statut when activate [note: '']
 3 : status after completion [note: '']

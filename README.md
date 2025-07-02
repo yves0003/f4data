@@ -1,4 +1,4 @@
-![f4data](https://img.shields.io/badge/f4data-0.1.9-blue)
+![f4data](https://img.shields.io/badge/f4data-0.1.10-blue)
 
 > View and understand your data directly in VS Code.
 

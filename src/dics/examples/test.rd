@@ -36,8 +36,8 @@ ref : ateliers.id <> users.id
 ref : yves.id <> users.'test id'
 
 enum job_status {
-created : status at the beginning of the process [note: 'Waiting to be processed']
-running : statut when activate [note: '']
-done : status after completion [note: '']
-'failure error' : status when error occurs [note: '']
+created : status at the beginning of the process[note: 'Waiting to be processed']
+running : statut when activate[note: '']
+done : status after completion[note: '']
+'failure error' : status when error occurs[note: '']
 }
