@@ -53,7 +53,7 @@ export async function addAllDictionaries() {
       openLabel: "Sélectionner",
     });
     if (dir) {
-      return dir[0].path;
+      return dir[0].fsPath;
     } else {
       return undefined;
     }
