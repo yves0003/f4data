@@ -2,7 +2,6 @@ import * as fs from "fs";
 import { parse } from "csv-parse";
 import { TreeDataProvider, TreeView, window, workspace } from "vscode";
 import path from "path";
-
 import * as readline from "readline/promises";
 import { EnumNode, OutputTable } from "./ast_to_data";
 
@@ -12,13 +11,48 @@ interface FileInfo {
   filename: string;
 }
 
+export async function extractTextFromFile(
+  filePath: string | undefined
+): Promise<string> {
+  try {
+    // Verify the path exists and is a file
+    if (!filePath) {
+      throw new Error(`Path is undefined`);
+    }
+    const stats = await fs.promises.stat(filePath);
+    if (!stats.isFile()) {
+      throw new Error(`Path is not a file: ${filePath}`);
+    }
+
+    // Use readline for efficient reading, especially for large files
+    const fileStream = fs.createReadStream(filePath, { encoding: "utf-8" });
+    const rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity,
+    });
+
+    const lines: string[] = [];
+    for await (const line of rl) {
+      lines.push(line);
+    }
+
+    return lines.join("\n");
+  } catch (error) {
+    throw new Error(
+      `Failed to read file ${filePath}: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+}
+
 /**
  * Reads and returns the contents of a file as text
  * @param filePath Full path to the file
  * @returns Promise with file contents as string
  * @throws Error if file cannot be read
  */
-export async function extractTextFromFile(
+export async function extractTextFromFile_old(
   filePath: string | undefined
 ): Promise<string> {
   try {

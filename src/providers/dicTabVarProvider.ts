@@ -28,7 +28,8 @@ class Variables extends TreeItem {
     } else {
       if (hasMapping) {
         this.contextValue = "parent_with_map";
-        this.label = `🔍 ${valName}${type ? ` (${type})` : ""}`;
+        //this.label = `🔍 ${valName}${type ? ` (${type})` : ""}`;
+        this.label = `${valName}${type ? ` (${type})` : ""}`;
       } else {
         this.contextValue = "parent_no_map";
         this.command = {
@@ -73,26 +74,30 @@ export class DicTabVarProvider implements TreeDataProvider<Variables> {
       //return Promise.resolve([element]);
       const description = new Variables(
         this.linkDir,
-        element.desc || "",
+        //element.desc || "",
+        "Display mapping",
         TreeItemCollapsibleState.None,
         true
       );
       return Promise.resolve([description]);
     } else {
       return Promise.resolve(
-        this.data.map(
-          (val) =>
-            new Variables(
-              this.linkDir,
-              val.name,
-              TreeItemCollapsibleState.None,
-              false,
-              val.desc,
-              val.type,
-              val.cle,
-              val.hasMapping
-            )
-        )
+        this.data.map((val) => {
+          const collapsibleState = val.hasMapping
+            ? TreeItemCollapsibleState.Collapsed
+            : TreeItemCollapsibleState.None;
+          const variables = new Variables(
+            this.linkDir,
+            val.name,
+            collapsibleState,
+            false,
+            val.desc,
+            val.type,
+            val.cle,
+            val.hasMapping
+          );
+          return variables;
+        })
       );
     }
   }

@@ -1,8 +1,5 @@
 import * as vscode from "vscode";
-import {
-  addAllDictionaries,
-  addDictionaries,
-} from "./commands/addDictionaries";
+import { addAllDictionaries } from "./commands/addDictionaries";
 import {
   AddInfoTitleView,
   extractTextFromFile,
@@ -27,6 +24,8 @@ import { MapPanelDiag } from "./panels/mapPanel";
 import { completionItemProvider } from "./providers/completionItemProvider";
 import { SearchPanelDiag } from "./panels/searchPanel";
 import { updateContextBasedOnConfig } from "./utilities/updateContextBasedOnConfig";
+import { Worker } from "worker_threads";
+import { parseFileInWorker } from "./workers/parseFileInWorker";
 
 const parser = new Parser();
 interface State {
@@ -155,9 +154,10 @@ export async function activate(context: vscode.ExtensionContext) {
         docProvider.setData([]);
         mapProvider.setDataAndUpdateContent([], "");
         const selectDicLink = dictionaryProvider.on_item_clicked(dicItem);
-        const textFile = await extractTextFromFile(selectDicLink);
-        const ast = parser.parse(textFile);
-        listTabsInfo = ast_to_data(ast.body, dicItem.label);
+        //const textFile = await extractTextFromFile(selectDicLink);
+        //const ast = parser.parse(textFile);
+        //listTabsInfo = ast_to_data(ast.body, dicItem.label);
+        listTabsInfo = await parseFileInWorker(selectDicLink, dicItem.label);
         dicTabProvider.setLink(path.dirname(selectDicLink || ""));
         dicTabProvider.setData(
           listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name))
@@ -187,9 +187,6 @@ export async function activate(context: vscode.ExtensionContext) {
           docProvider.setData([]);
         }
         dictionaryProvider.revealItem(dicItem.label);
-        // if (MapPanelDiag.currentPanel) {
-        //   MapPanelDiag.render(context.extensionUri, dicItem, listTabsInfo);
-        // }
       }
     }
   );
@@ -311,33 +308,29 @@ export async function activate(context: vscode.ExtensionContext) {
   const displayDiagramPage = vscode.commands.registerCommand(
     "f4data.mapWebview",
     async (dicItem: Dictionary) => {
+      if (listTabsInfo.name !== dicItem.label) {
+        await vscode.commands.executeCommand(dicItem.command.command, dicItem);
+      }
       if (
         MapPanelDiag.currentPanel?.getTitle() !== `graph : ${dicItem.label}`
       ) {
-        const selectDicLink = dictionaryProvider.on_item_clicked(dicItem);
-        const textFile = await extractTextFromFile(selectDicLink);
-        const ast = parser.parse(textFile);
-        listTabsInfo = ast_to_data(ast.body);
         listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name));
       }
       MapPanelDiag.render(context.extensionUri, dicItem, listTabsInfo);
-      vscode.commands.executeCommand(dicItem.command.command, dicItem);
     }
   );
   const displaySearchPage = vscode.commands.registerCommand(
     "f4data.searchWebview",
     async (dicItem: Dictionary) => {
+      if (listTabsInfo.name !== dicItem.label) {
+        await vscode.commands.executeCommand(dicItem.command.command, dicItem);
+      }
       if (
         SearchPanelDiag.currentPanel?.getTitle() !== `search : ${dicItem.label}`
       ) {
-        const selectDicLink = dictionaryProvider.on_item_clicked(dicItem);
-        const textFile = await extractTextFromFile(selectDicLink);
-        const ast = parser.parse(textFile);
-        listTabsInfo = ast_to_data(ast.body);
         listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name));
       }
       SearchPanelDiag.render(context.extensionUri, dicItem, listTabsInfo);
-      vscode.commands.executeCommand(dicItem.command.command, dicItem);
     }
   );
   context.subscriptions.push(copyVarVal);

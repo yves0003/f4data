@@ -265,6 +265,7 @@
     "csv-parse": "^5.6.0",
     "lodash": "^4.17.21",
     "markdown-it-collapsible": "^2.0.2",
-    "markdown-it-highlightjs": "^4.2.0"
+    "markdown-it-highlightjs": "^4.2.0",
+    "worker-threads": "^1.0.0"
   }
 }
