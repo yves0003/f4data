@@ -3,7 +3,7 @@
   "displayName": "f4data",
   "description": "",
   "publisher": "yves0003",
-  "version": "0.1.12",
+  "version": "0.2.0",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -21,7 +21,7 @@
     {
       "href": "https://yveszendja.com",
       "description": "badge version",
-      "url": "https://img.shields.io/badge/f4data-0.1.12-blue"
+      "url": "https://img.shields.io/badge/f4data-0.2.0-blue"
     }
   ],
   "activationEvents": [
@@ -122,6 +122,16 @@
       {
         "command": "f4data.clickOnVar",
         "title": "Click on a variable"
+      },
+      {
+        "command": "f4data.copyTableToCSV",
+        "title": "Copy all infos",
+        "icon": "$(files)"
+      },
+      {
+        "command": "f4data.copyVarsToCSV",
+        "title": "Copy all infos",
+        "icon": "$(files)"
       }
     ],
     "viewsContainers": {
@@ -196,6 +206,16 @@
         {
           "command": "f4data.addDictionaries",
           "when": "view == dic-list",
+          "group": "navigation@1"
+        },
+        {
+          "command": "f4data.copyTableToCSV",
+          "when": "view == dic-tabs",
+          "group": "navigation@1"
+        },
+        {
+          "command": "f4data.copyVarsToCSV",
+          "when": "view == dic-vars",
           "group": "navigation@1"
         }
       ],

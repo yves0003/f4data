@@ -2,19 +2,15 @@ import * as vscode from "vscode";
 import { addAllDictionaries } from "./commands/addDictionaries";
 import {
   AddInfoTitleView,
-  extractTextFromFile,
   findMatchingDirectory,
   getAllMarkdownFiles,
   getFilesByExtension,
-  shouldResume,
   sortVars,
-  validateLinkExistOrIsUnique,
 } from "./helpers/helpers";
 import { find, indexOf as lodashIndexOf } from "lodash";
 import { Dictionary, DictionaryProvider } from "./providers/dictionaryProvider";
 import path from "path";
-import { Parser } from "./helpers/Parser";
-import { ast_to_data, EnumNode, RefNode } from "./helpers/ast_to_data";
+import { EnumNode, RefNode } from "./helpers/ast_to_data";
 import { DicTabProvider } from "./providers/dicTabProvider";
 import { DicTabVarProvider } from "./providers/dicTabVarProvider";
 import { OutputTable } from "./helpers/ast_to_data";
@@ -24,10 +20,9 @@ import { MapPanelDiag } from "./panels/mapPanel";
 import { completionItemProvider } from "./providers/completionItemProvider";
 import { SearchPanelDiag } from "./panels/searchPanel";
 import { updateContextBasedOnConfig } from "./utilities/updateContextBasedOnConfig";
-import { Worker } from "worker_threads";
 import { parseFileInWorker } from "./workers/parseFileInWorker";
+import { jsonToExcelTable } from "./helpers/jsonToExcelTable";
 
-const parser = new Parser();
 interface State {
   title: string;
   name: string;
@@ -63,6 +58,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration("f4data");
   updateContextBasedOnConfig(config);
   let selectedDic: OutputTable[] = [];
+  let selectedTab: string = "";
   let allMappDic: EnumNode[];
   let listTabsInfo: {
     name: string;
@@ -70,6 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
     mappings: EnumNode[];
     links: RefNode[];
   } = { name: "", tables: [], mappings: [], links: [] };
+  let listVarTabsInfo: OutputTable | undefined;
 
   const dictionaryProvider = new DictionaryProvider();
   const dicListView = vscode.window.createTreeView("dic-list", {
@@ -92,7 +89,6 @@ export async function activate(context: vscode.ExtensionContext) {
     "f4data.refreshAll",
     async () => {
       vscode.window.showInformationMessage("Actualisé!!!!");
-      listTabsInfo.name = "";
       dicTabProvider.setData([]);
       dicTabVarProvider.setData([]);
       docProvider.setData([]);
@@ -100,6 +96,9 @@ export async function activate(context: vscode.ExtensionContext) {
       title_tab.setTitle("Tables");
       title_var.setTitle(`Variables`);
       selectedDic = [];
+      selectedTab = "";
+      listVarTabsInfo = undefined;
+      listTabsInfo = { name: "", tables: [], mappings: [], links: [] };
       vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
     }
   );
@@ -154,9 +153,6 @@ export async function activate(context: vscode.ExtensionContext) {
         docProvider.setData([]);
         mapProvider.setDataAndUpdateContent([], "");
         const selectDicLink = dictionaryProvider.on_item_clicked(dicItem);
-        //const textFile = await extractTextFromFile(selectDicLink);
-        //const ast = parser.parse(textFile);
-        //listTabsInfo = ast_to_data(ast.body, dicItem.label);
         listTabsInfo = await parseFileInWorker(selectDicLink, dicItem.label);
         dicTabProvider.setLink(path.dirname(selectDicLink || ""));
         dicTabProvider.setData(
@@ -170,6 +166,7 @@ export async function activate(context: vscode.ExtensionContext) {
           }`
         );
         title_var.setTitle(`Variables`);
+        listVarTabsInfo = undefined;
         selectedDic = listTabsInfo.tables;
         allMappDic = listTabsInfo.mappings;
 
@@ -194,10 +191,9 @@ export async function activate(context: vscode.ExtensionContext) {
     "f4data.clickOnTable",
     async (item) => {
       if (selectedDic.length > 0) {
-        const listVarTabsInfo = selectedDic.find(
-          (dict) => dict.name === item.label
-        );
+        listVarTabsInfo = selectedDic.find((dict) => dict.name === item.label);
         if (listVarTabsInfo) {
+          selectedTab = item.label;
           dicTabVarProvider.setData(listVarTabsInfo.variables.sort(sortVars));
           title_var.setTitle(
             `Variables${
@@ -207,6 +203,7 @@ export async function activate(context: vscode.ExtensionContext) {
             }`
           );
         } else {
+          selectedTab = "";
           dicTabVarProvider.setData([]);
           vscode.window.showWarningMessage(`No vars for : ${item.label}`);
         }
@@ -252,6 +249,7 @@ export async function activate(context: vscode.ExtensionContext) {
       docProvider.setData([]);
       title_var.setTitle(`Variables`);
       title_tab.setTitle("Tables");
+      selectedTab = "";
       if (MapPanelDiag.currentPanel?.getTitle() === `graph : ${item.label}`) {
         MapPanelDiag.currentPanel?.dispose();
       }
@@ -333,6 +331,46 @@ export async function activate(context: vscode.ExtensionContext) {
       SearchPanelDiag.render(context.extensionUri, dicItem, listTabsInfo);
     }
   );
+  const copyTableToCSV = vscode.commands.registerCommand(
+    "f4data.copyTableToCSV",
+    async () => {
+      const tableToCopy = listTabsInfo.tables.map((table) => ({
+        name: table.name,
+        description: table.description,
+      }));
+      const table = jsonToExcelTable(tableToCopy);
+      try {
+        if (table === "") {
+          vscode.window.showErrorMessage(`Failed to copy : No tabs`);
+        } else {
+          await vscode.env.clipboard.writeText(table);
+          vscode.window.showInformationMessage(`Copied`);
+        }
+      } catch (err) {
+        vscode.window.showErrorMessage(`Failed to copy : ${err}`);
+      }
+    }
+  );
+  const copyVarsToCSV = vscode.commands.registerCommand(
+    "f4data.copyVarsToCSV",
+    async () => {
+      if (listVarTabsInfo !== undefined) {
+        const tableToCopy = listVarTabsInfo.variables.map((val) => ({
+          name: val.name,
+          description: val.desc,
+        }));
+        const table = jsonToExcelTable(tableToCopy);
+        try {
+          await vscode.env.clipboard.writeText(table);
+          vscode.window.showInformationMessage(`Copied`);
+        } catch (err) {
+          vscode.window.showErrorMessage(`Failed to copy : ${err}`);
+        }
+      } else {
+        vscode.window.showErrorMessage(`Failed to copy : No vars`);
+      }
+    }
+  );
   context.subscriptions.push(copyVarVal);
   context.subscriptions.push(displayDoc);
   context.subscriptions.push(refreshAll);
@@ -347,6 +385,8 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(displayMapOnView);
   context.subscriptions.push(displayDiagramPage);
   context.subscriptions.push(displaySearchPage);
+  context.subscriptions.push(copyTableToCSV);
+  context.subscriptions.push(copyVarsToCSV);
   context.subscriptions.push(completionItemProvider(context));
 
   //vscode.window.registerTreeDataProvider("dic-list", dictionaryProvider);
