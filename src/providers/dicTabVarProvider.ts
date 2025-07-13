@@ -2,6 +2,7 @@ import {
   Event,
   EventEmitter,
   ThemeIcon,
+  ThemeColor,
   TreeDataProvider,
   TreeItem,
   TreeItemCollapsibleState,
@@ -20,32 +21,37 @@ class Variables extends TreeItem {
     public readonly hasMapping?: boolean
   ) {
     super(valName, collapsibleState);
-    this.description = "";
-    this.command = undefined;
+
+    const hasTypeLabel = type ? ` (${type})` : "";
+
     if (isChild) {
       this.tooltip = "";
       this.iconPath = undefined;
-    } else {
-      if (hasMapping) {
-        this.contextValue = "parent_with_map";
-        //this.label = `🔍 ${valName}${type ? ` (${type})` : ""}`;
-        this.label = `${valName}${type ? ` (${type})` : ""}`;
-      } else {
-        this.contextValue = "parent_no_map";
-        this.command = {
-          title: "",
-          command: "f4data.clickOnVar",
-          arguments: [this],
-        };
-        this.label = `${valName}${type ? ` (${type})` : ""}`;
-      }
+      this.command = undefined;
+      this.description = "";
+      return;
+    }
 
-      this.tooltip = desc;
-      this.description = desc;
+    // Set common label
+    this.label = `${valName}${hasTypeLabel}`;
+    this.tooltip = desc;
+    this.description = desc;
 
-      if (cle) {
-        this.iconPath = new ThemeIcon("star-full");
-      }
+    // Set context
+    this.contextValue = hasMapping ? "parent_with_map" : "parent_no_map";
+
+    // Set default icon
+    const baseIcon = hasMapping ? "info" : "circle-large-outline";
+    const color = cle ? new ThemeColor("charts.blue") : undefined;
+    this.iconPath = new ThemeIcon(baseIcon, color);
+
+    // Set command if not mapped
+    if (!hasMapping) {
+      this.command = {
+        title: "",
+        command: "f4data.clickOnVar",
+        arguments: [this],
+      };
     }
   }
 }
@@ -83,9 +89,10 @@ export class DicTabVarProvider implements TreeDataProvider<Variables> {
     } else {
       return Promise.resolve(
         this.data.map((val) => {
-          const collapsibleState = val.hasMapping
-            ? TreeItemCollapsibleState.Collapsed
-            : TreeItemCollapsibleState.None;
+          // const collapsibleState = val.hasMapping
+          //   ? TreeItemCollapsibleState.Collapsed
+          //   : TreeItemCollapsibleState.None;
+          const collapsibleState = TreeItemCollapsibleState.None;
           const variables = new Variables(
             this.linkDir,
             val.name,
