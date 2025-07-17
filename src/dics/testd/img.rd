@@ -42,10 +42,12 @@ enum ateliers.List_Users {
 2 : statut when activate [note: '']
 3 : status after completion [note: '']
 'failure error' : status when error occurs [note: '']
+-1 : test [note: '']
 }
 
 enum yves.titre {
-1 : status at the beginning of the process [note: 'Waiting to be processed']
+éton : status at the beginning of the process [note: 'Waiting to be processed']
+l'etak : revu  [note: '']
 2 : statut when activate [note: '']
 3 : status after completion [note: '']
 'failure error' : status when error occurs [note: '']

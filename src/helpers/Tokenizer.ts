@@ -63,7 +63,8 @@ export const Spec: [
   [/^<>/, "RELATIONAL_OPERATOR"],
   [/^[><-]/, "RELATIONAL_OPERATOR"],
   // the rest
-  [/^\w+/, "IDENTIFIER"],
+  //[/^\w+/, "IDENTIFIER"],
+  [/^[\wáéíóúÁÉÍÓÚàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛäëïöüÄËÏÖÜ']+/, "IDENTIFIER"],
   [/\n/, "NEWLINE"],
 ];
 

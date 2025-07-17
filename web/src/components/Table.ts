@@ -31,12 +31,15 @@ export class Table {
     const x = this.#table.position.pos_x;
     const y = this.#table.position.pos_y;
     this.cursorIsIn = table.cursorIsIn;
+    //const rootStyle = getComputedStyle(document.body);
+    //--vscode-editor-foreground
     for (let i = 0; i < variables.length; i++) {
       if (i === 0) {
         //header
         const rect = new Rect(x, y, width, height, this.#table.name, i);
         rect.backgroundColor = this.#headerBg;
         rect.colorText = this.#headerTextColor;
+        //rect.colorText = rootStyle.getPropertyValue('--vscode-editor-foreground');
         rect.textSize = this.#fontSize;
         this.#tabHeader = rect;
       }
