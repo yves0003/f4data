@@ -3,6 +3,10 @@
   "displayName": "f4data",
   "description": "View, understand and search in your data directly in VS Code",
   "publisher": "yves0003",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yves0003/f4data.git"
+  },
   "version": "0.2.3",
   "engines": {
     "vscode": "^1.80.0"
