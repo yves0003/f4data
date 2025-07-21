@@ -1,9 +1,9 @@
 {
   "name": "f4data",
   "displayName": "f4data",
-  "description": "",
+  "description": "View, understand and search in your data directly in VS Code",
   "publisher": "yves0003",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -11,7 +11,12 @@
   "keywords": [
     "sas",
     "data",
-    "dictionary"
+    "dictionary",
+    "onboarding",
+    "BCBS239",
+    "SR11‑7",
+    "credit risk",
+    "quant finance"
   ],
   "icon": "resources/icon/logo_128x128.png",
   "categories": [
@@ -21,7 +26,7 @@
     {
       "href": "https://yveszendja.com",
       "description": "badge version",
-      "url": "https://img.shields.io/badge/f4data-0.2.2-blue"
+      "url": "https://img.shields.io/badge/f4data-0.2.3-blue"
     }
   ],
   "activationEvents": [

@@ -17,9 +17,6 @@ export function parseFileInWorker(
     });
 
     worker.on("message", ({ listTabsInfo }) => {
-      //   window.showInformationMessage(
-      //     `All Tables : ${listTabsInfo.tables.length} tables.`
-      //   );
       resolve(listTabsInfo);
     });
 

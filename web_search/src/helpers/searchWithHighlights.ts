@@ -41,12 +41,26 @@ const highlightMatch = (text: string, searchTerm: string): string => {
     }
   }
 
+  if (windowStart === windowEnd) {
+    windowStart = 0;
+  }
+
   const windowText = text.slice(windowStart, windowEnd);
   const windowTextLower = lowerText.slice(windowStart, windowEnd);
 
   // Highlight matches within window
   let result = "";
   let i = 0;
+  console.log(
+    result,
+    searchLen,
+    windowTextLower,
+    i,
+    windowText,
+    windowStart,
+    windowEnd,
+    matchIndex
+  );
 
   while (i < windowText.length) {
     const chunk = windowTextLower.slice(i, i + searchLen);
@@ -57,6 +71,7 @@ const highlightMatch = (text: string, searchTerm: string): string => {
       result += windowText[i];
       i++;
     }
+    console.log(result, searchLen, windowTextLower, i, windowText);
   }
 
   const prefix = windowStart > 0 ? "…" : "";
@@ -124,7 +139,7 @@ export function searchWithHighlights(
         );
         tryMatch(
           member.description,
-          [member.key, "enum", "members", member.key],
+          [`${member.key} / ${enumNode.name}`, "enum", "members", member.key],
           "description"
         );
       }

@@ -114,6 +114,7 @@ const ResDetail = styled.div`
 
 const ResDetail_info = styled.div<{ theme: { borderColor: string } }>`
   position: absolute;
+  white-space: nowrap;
   top: 50%;
   transform: translateY(-50%);
   right: 100%;

@@ -21,6 +21,7 @@ table yves {
 	titre varchar
 	date timestamp
 	list_users varchar
+	testament_user_dm varchar
 }
 # Table des utilisateurs
 table test.ateliers as test {
