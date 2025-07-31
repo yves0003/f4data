@@ -1,6 +1,6 @@
-![f4data](https://img.shields.io/badge/f4data-0.2.3-blue)
+![f4data](https://img.shields.io/badge/f4data-0.2.4-blue)
 
-> 📊 f4data brings your bank’s credit risk data dictionary into VS Code. Instantly explore dictionaries, tables, variable definitions, and documentation — right in your editor. Ideal for credit analysts, quants, and model risk teams focused on model and onboarding.
+> 📊 f4data brings your data dictionary into VS Code. Instantly explore dictionaries, tables, variable definitions, and documentation — right in your editor. Ideal for credit analysts, quants, and model risk teams focused on model and onboarding.
 
 This extension allow to view and understand your data in VS Code. the support includes :
 - Listing and navigate between all the dictionaries
@@ -11,11 +11,11 @@ This extension allow to view and understand your data in VS Code. the support in
 - View definition of a variables
 - Defined and update the working directory of each dictionary
 
-![detail app](https://res.cloudinary.com/lokalistic/image/upload/v1725221577/vscode_ext/enregistrementapp2_sgx4hx.gif)
+![detail app](https://res.cloudinary.com/lokalistic/image/upload/v1753987940/vscode_ext/f4ext-vscode.gif)
 
 The extension only allow two types of file :
 
-- rd : to write, read and update all information for the dictionaries, tables and the mapping
+- rd : to write, read and update all informations for the dictionaries, tables and the mapping
 - markdown : to display other relevant informations (more the come like pdf, etc...)
 
 # Getting start

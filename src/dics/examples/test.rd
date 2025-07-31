@@ -1,5 +1,4 @@
 // Use this language to define your database structure
-// Docs: https://dbml.dbdiagram.io/docs
 
 # Table des utilisateurs
 table users as us {
@@ -16,12 +15,13 @@ verification
 verification'''
 }
 
-table yves {
+table user_admin {
 	id integer tata test
 	titre varchar
 	date timestamp
 	list_users varchar
 	testament_user_dm varchar
+	job_status varchar
 }
 # Table des utilisateurs
 table test.ateliers as test {
@@ -36,7 +36,7 @@ ref : ateliers.list_users > users.id
 ref : ateliers.id <> users.id
 ref : yves.id <> users.'test id'
 
-enum job_status {
+enum user_admin.job_status {
 created : status at the beginning of the process[note: 'Waiting to be processed']
 running : statut when activate[note: '']
 done : status after completion[note: '']

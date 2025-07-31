@@ -181,7 +181,7 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
   }
   async on_open_work_dir(item: Dictionary) {
     if (item.label === undefined || "") {
-      window.showErrorMessage(`Error: Open Work Directory`);
+      window.showErrorMessage(`Error: Open Work Directory not defined`);
     }
     const config = workspace.getConfiguration("f4data");
     const dictionaries = config.get("list") as listDico;
