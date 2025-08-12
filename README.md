@@ -1,4 +1,4 @@
-![f4data](https://img.shields.io/badge/f4data-0.2.4-blue)
+![f4data](https://img.shields.io/badge/f4data-0.2.5-blue)
 
 > 📊 f4data brings your data dictionary into VS Code. Instantly explore dictionaries, tables, variable definitions, and documentation — right in your editor. Ideal for credit analysts, quants, and model risk teams focused on model and onboarding.
 
@@ -28,6 +28,7 @@ To start using this extension, you need to:
 The created folder for each dictionary should contains the following structure to work :
 
 - folder `Documents` : where you can add any markdown (.md) file you want that help you understand your data.
+- folder `Tables` : where you can add a markdown file (.md) with the name of a selected tables you want that help you understand your data.
 - a `rd` file : where you can define your tables, the variables, the mappings and the links between tables.
 
 ## Directory structure
@@ -36,6 +37,7 @@ The created folder for each dictionary should contains the following structure t
 ├── Your first Dictionary
 │   ├── Documents
 │   │   ├── Change logs.md
+│   ├── Tables
 │   ├── test.rd
 
 ```

@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/yves0003/f4data.git"
   },
-  "version": "0.2.4",
+  "version": "0.2.5",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -30,7 +30,7 @@
     {
       "href": "https://yveszendja.com",
       "description": "badge version",
-      "url": "https://img.shields.io/badge/f4data-0.2.4-blue"
+      "url": "https://img.shields.io/badge/f4data-0.2.5-blue"
     }
   ],
   "activationEvents": [
@@ -141,6 +141,11 @@
         "command": "f4data.copyVarsToCSV",
         "title": "Copy all infos",
         "icon": "$(files)"
+      },
+      {
+        "command": "f4data.viewDocOnTable",
+        "title": "Open the documentation",
+        "icon": "$(book)"
       }
     ],
     "viewsContainers": {
@@ -262,6 +267,11 @@
         {
           "when": "view == dic-vars && viewItem == parent_with_map",
           "command": "f4data.displayMap",
+          "group": "inline@1"
+        },
+        {
+          "when": "view == dic-tabs && viewItem == parent_with_docs",
+          "command": "f4data.viewDocOnTable",
           "group": "inline@1"
         }
       ]

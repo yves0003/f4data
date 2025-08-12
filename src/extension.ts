@@ -371,6 +371,14 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     }
   );
+  const viewDocOnTable = vscode.commands.registerCommand(
+    "f4data.viewDocOnTable",
+    async (item) => {
+      vscode.window.showInformationMessage(item.label);
+      const markdownUri = vscode.Uri.file(item.docLink);
+      await vscode.commands.executeCommand("markdown.showPreview", markdownUri);
+    }
+  );
   context.subscriptions.push(copyVarVal);
   context.subscriptions.push(displayDoc);
   context.subscriptions.push(refreshAll);
@@ -387,6 +395,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(displaySearchPage);
   context.subscriptions.push(copyTableToCSV);
   context.subscriptions.push(copyVarsToCSV);
+  context.subscriptions.push(viewDocOnTable);
   context.subscriptions.push(completionItemProvider(context));
 
   //vscode.window.registerTreeDataProvider("dic-list", dictionaryProvider);
