@@ -15,6 +15,10 @@ verification
 verification'''
 }
 
+table yves_gaetabt_ {
+	identifiant num
+}
+
 table user_admin {
 	id integer tata test
 	titre varchar

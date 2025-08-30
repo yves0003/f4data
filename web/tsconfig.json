@@ -9,6 +9,6 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "sourceMap": false,
+    "sourceMap": false
   }
 }

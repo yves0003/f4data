@@ -72,6 +72,7 @@ export interface OutputTable {
   variables: OutputVariable[];
   date: string;
   __v: number;
+  hideInMap: boolean;
 }
 
 // Helper type guards
@@ -153,10 +154,11 @@ export const ast_to_data2 = (
         cursorIsIn: false,
         position: { pos_x: 0, pos_y: 0 },
         _id: String(tableCount),
-        name: item.name,
+        name: item.name.endsWith("_") ? item.name.slice(0, -1) : item.name,
         description: lastDefinition,
         variables,
         date: new Date().toISOString().split("T")[0],
+        hideInMap: item.name.endsWith("_"),
         __v: 0,
       };
 

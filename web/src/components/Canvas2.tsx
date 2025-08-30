@@ -330,26 +330,28 @@ const Canvas = ({
   useEffect(() => {
     state.setElements((draft) => {
       if (state.elements.length === 0) {
-        return listTables;
+        return listTables.filter((table) => !table.hideInMap);
       } else {
         const newTables: OutputTable[] = [];
-        listTables.forEach((table) => {
-          let elementFound = draft.find((e) => e._id === table._id);
-          if (elementFound) {
-            elementFound = {
-              ...table,
-              position: {
-                pos_x: elementFound.position.pos_x,
-                pos_y: elementFound.position.pos_y,
-              },
-            };
-            // elementFound.position.pos_y = prev.position.pos_y;
-            // elementFound.position.pos_x = prev.position.pos_x;
-            newTables.push(elementFound);
-          } else {
-            newTables.push(table);
-          }
-        });
+        listTables
+          .filter((table) => !table.hideInMap)
+          .forEach((table) => {
+            let elementFound = draft.find((e) => e._id === table._id);
+            if (elementFound) {
+              elementFound = {
+                ...table,
+                position: {
+                  pos_x: elementFound.position.pos_x,
+                  pos_y: elementFound.position.pos_y,
+                },
+              };
+              // elementFound.position.pos_y = prev.position.pos_y;
+              // elementFound.position.pos_x = prev.position.pos_x;
+              newTables.push(elementFound);
+            } else {
+              newTables.push(table);
+            }
+          });
         return newTables;
       }
     });

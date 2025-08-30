@@ -9,7 +9,7 @@ import {
 class Doc extends TreeItem {
   constructor(public readonly label: string, public readonly filePath: string) {
     super(label);
-    this.iconPath = new ThemeIcon("file");
+    this.iconPath = new ThemeIcon("markdown");
     this.filePath = filePath;
   }
   command = {

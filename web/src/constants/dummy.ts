@@ -205,6 +205,7 @@ export const dummy = [
         ],
         date: "2025-06-25",
         __v: 0,
+        hideInMap: true,
       },
       {
         cursorIsIn: false,
@@ -285,6 +286,7 @@ export const dummy = [
         ],
         date: "2025-06-25",
         __v: 0,
+        hideInMap: false,
       },
       {
         cursorIsIn: false,
@@ -343,6 +345,7 @@ export const dummy = [
         ],
         date: "2025-06-25",
         __v: 0,
+        hideInMap: false,
       },
     ],
     mappings: [

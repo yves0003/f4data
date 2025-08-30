@@ -35,9 +35,9 @@ class Table extends TreeItem {
         this.iconPath = new ThemeIcon("folder-library");
       } else {
         this.contextValue = "parent_no_docs";
-        this.iconPath = new ThemeIcon("folder");
+        this.iconPath = new ThemeIcon("symbol-folder");
+        //this.iconPath = new ThemeIcon("folder");
       }
-      //this.iconPath = new ThemeIcon("window");
       this.command = {
         title: "selected table",
         command: "f4data.clickOnTable",
@@ -45,7 +45,6 @@ class Table extends TreeItem {
       };
     }
   }
-  //iconPath = new ThemeIcon("file");
 }
 export class DicTabProvider implements TreeDataProvider<Table> {
   private data: list_tabs[] = [];

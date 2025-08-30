@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/yves0003/f4data.git"
   },
-  "version": "0.2.5",
+  "version": "0.2.6",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -30,7 +30,7 @@
     {
       "href": "https://yveszendja.com",
       "description": "badge version",
-      "url": "https://img.shields.io/badge/f4data-0.2.5-blue"
+      "url": "https://img.shields.io/badge/f4data-0.2.6-blue"
     }
   ],
   "activationEvents": [
@@ -278,7 +278,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run build:webview && npm run build:websearch && npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
@@ -286,6 +286,7 @@
     "test": "vscode-test",
     "start:webview": "cd web && npm run start",
     "build:webview": "cd web && npm run build",
+    "build:websearch": "cd web_search && npm run build",
     "build:vsix": "vsce package -o ./packages"
   },
   "devDependencies": {
