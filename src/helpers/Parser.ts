@@ -63,32 +63,33 @@ export class Parser {
 
   private parseEnum() {
     this._eat("ENUM");
-    const [table, name] = this.parseQualifiedName();
+    const allNames = this.parseMultiQualifiedName();
     //const name = this._eat("IDENTIFIER")?.value;
-
+    const [last_table, last_name] = allNames.slice(-1)!;
     // Require opening brace `{`
     if (this._lookahead?.type !== "LBRACE") {
       this.errors.push(
-        `Expected '{' after enum name '${name || ""}' at line ${
+        `Expected '{' after enum name '${last_name || ""}' at line ${
           this._lookahead?.line ?? "unknown"
         }`
       );
       this._recoverFromError();
       return {
         type: "Enum",
-        name,
-        table: table || "Global",
+        name: last_name,
+        table: last_table || "Global",
         members: [],
         incomplete: true,
       };
     }
+
     this._eat("LBRACE");
 
     while ((this._lookahead?.type as string) === "NEWLINE") {
       this._eat("NEWLINE");
     }
 
-    const members = [];
+    let members = [];
     while (
       this._lookahead &&
       (this._lookahead?.type as string) !== "RBRACE" &&
@@ -107,7 +108,16 @@ export class Parser {
     }
 
     this._eat("RBRACE");
-    return { type: "Enum", table: table || "Global", name, members };
+
+    return {
+      type: "Enum",
+      allEnum: allNames.map((a) => ({
+        type: "Enum",
+        table: a[0] || "Global",
+        name: a[1],
+        members: members,
+      })),
+    };
   }
 
   private parseEnumMember() {
@@ -300,12 +310,91 @@ export class Parser {
   }
 
   private parseQualifiedName() {
-    const parts = [this._eat("IDENTIFIER")?.value];
+    let allNames = [];
+    let parts = [this._eat("IDENTIFIER")?.value];
     while (this._lookahead?.type === "DOT") {
       this._eat("DOT");
       parts.push(this._eat("IDENTIFIER")?.value || "");
     }
-    return parts.length === 1 ? [null, parts[0]] : [parts[0], parts[1]];
+    if (parts.length === 1) {
+      allNames.push([null, parts[0]]);
+    } else {
+      allNames.push([parts[0], parts[1]]);
+    }
+    if (this._lookahead?.type === "IDENTIFIER") {
+      let parts2 = [this._eat("IDENTIFIER")?.value];
+      if (
+        this._lookahead.type !== "IDENTIFIER" &&
+        this._lookahead.type === "DOT"
+      ) {
+        this._eat("DOT");
+        parts2.push(this._eat("IDENTIFIER")?.value || "");
+      }
+      if (parts2.length === 1) {
+        allNames.push([null, parts2[0]]);
+      } else {
+        allNames.push([parts2[0], parts2[1]]);
+      }
+    }
+    return allNames.length > 1 ? allNames[1] : allNames[0];
+  }
+
+  private parseMultiQualifiedNamef() {
+    let allNames = [];
+    let parts = [this._eat("IDENTIFIER")?.value];
+    while (this._lookahead?.type === "DOT") {
+      this._eat("DOT");
+      parts.push(this._eat("IDENTIFIER")?.value || "");
+    }
+    if (parts.length === 1) {
+      allNames.push([null, parts[0]]);
+    } else {
+      allNames.push([parts[0], parts[1]]);
+    }
+
+    if (this._lookahead?.type === "IDENTIFIER") {
+      let parts2 = [this._eat("IDENTIFIER")?.value];
+      if (
+        this._lookahead.type !== "IDENTIFIER" &&
+        this._lookahead.type === "DOT"
+      ) {
+        this._eat("DOT");
+        parts2.push(this._eat("IDENTIFIER")?.value || "");
+      }
+      if (parts2.length === 1) {
+        allNames.push([null, parts2[0]]);
+      } else {
+        allNames.push([parts2[0], parts2[1]]);
+      }
+    }
+    return allNames;
+  }
+
+  private parseMultiQualifiedName() {
+    const allNames: [string | null, string][] = [];
+
+    // Keep looping as long as next token is IDENTIFIER
+    while (this._lookahead?.type === "IDENTIFIER") {
+      const parts: (string | null)[] = [this._eat("IDENTIFIER")?.value || null];
+
+      // Handle optional `.IDENTIFIER`
+      if (
+        this._lookahead.type !== "IDENTIFIER" &&
+        this._lookahead?.type === "DOT"
+      ) {
+        this._eat("DOT");
+        parts.push(this._eat("IDENTIFIER")?.value || "");
+      }
+
+      // Normalize into tuple [left, right]
+      if (parts.length === 1) {
+        allNames.push([null, parts[0] as string]);
+      } else {
+        allNames.push([parts[0] as string, parts[1] as string]);
+      }
+    }
+
+    return allNames;
   }
 
   private parseAlias() {

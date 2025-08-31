@@ -15,11 +15,14 @@ type TableNode = {
 
 export type EnumNode = {
   type: "Enum";
+  allEnum: EnumNodeElt[];
+};
+export type EnumNodeElt = {
+  type: "Enum";
   name: string;
   members: MemberNode[];
   table?: string;
 };
-
 export type RefNode = {
   type: "Ref";
   left: string;
@@ -103,18 +106,21 @@ export const ast_to_data = (
 ): {
   name: string;
   tables: OutputTable[];
-  mappings: EnumNode[];
+  mappings: EnumNodeElt[];
   links: RefNode[];
 } => {
   let lastDefinition = "";
   let tableCount = 0;
   const result: OutputTable[] = [];
-  const allMapping: EnumNode[] = [];
+  const allMapping: EnumNodeElt[] = [];
   const allRef: RefNode[] = [];
 
   input.forEach((item) => {
     if (item && isEnumNode(item)) {
-      allMapping.push(item);
+      for (let i = 0; i < item.allEnum.length; i++) {
+        const elt = item.allEnum[i];
+        addUniqueToArr(allMapping, elt, ["name", "table"]);
+      }
     }
   });
   input.forEach((item) => {
@@ -164,7 +170,9 @@ export const ast_to_data = (
         cursorIsIn: false,
         position: { pos_x: 0, pos_y: 0 },
         _id: String(tableCount),
-        name: item.name.endsWith("_") ? item.name.slice(0, -1) : item.name,
+        name: item.name.endsWith("_")
+          ? (item.name.slice(0, -1) as string)
+          : (item.name as string),
         description: lastDefinition,
         variables,
         date: new Date().toISOString().split("T")[0],
@@ -179,3 +187,10 @@ export const ast_to_data = (
   });
   return { name, tables: result, mappings: allMapping, links: allRef };
 };
+
+export function addUniqueToArr<T>(arr: T[], obj: T, keys: (keyof T)[]) {
+  const exists = arr.some((item) => keys.every((k) => item[k] === obj[k]));
+  if (!exists) {
+    arr.push(obj);
+  }
+}

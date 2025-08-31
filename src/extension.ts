@@ -10,7 +10,7 @@ import {
 import { find, indexOf as lodashIndexOf } from "lodash";
 import { Dictionary, DictionaryProvider } from "./providers/dictionaryProvider";
 import path from "path";
-import { EnumNode, RefNode } from "./helpers/ast_to_data";
+import { EnumNode, EnumNodeElt, RefNode } from "./helpers/ast_to_data";
 import { DicTabProvider } from "./providers/dicTabProvider";
 import { DicTabVarProvider } from "./providers/dicTabVarProvider";
 import { OutputTable } from "./helpers/ast_to_data";
@@ -59,11 +59,11 @@ export async function activate(context: vscode.ExtensionContext) {
   updateContextBasedOnConfig(config);
   let selectedDic: OutputTable[] = [];
   let selectedTab: string = "";
-  let allMappDic: EnumNode[];
+  let allMappDic: EnumNodeElt[];
   let listTabsInfo: {
     name: string;
     tables: OutputTable[];
-    mappings: EnumNode[];
+    mappings: EnumNodeElt[];
     links: RefNode[];
   } = { name: "", tables: [], mappings: [], links: [] };
   let listVarTabsInfo: OutputTable | undefined;

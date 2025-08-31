@@ -8,7 +8,12 @@ import {
 } from "vscode";
 import { getUri, getUriWithHash } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
-import { EnumNode, OutputTable, RefNode } from "../helpers/ast_to_data";
+import {
+  EnumNode,
+  EnumNodeElt,
+  OutputTable,
+  RefNode,
+} from "../helpers/ast_to_data";
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -26,7 +31,7 @@ export class MapPanelDiag {
   private _disposables: Disposable[] = [];
   private static _listTabsInfo: {
     tables: OutputTable[];
-    mappings: EnumNode[];
+    mappings: EnumNodeElt[];
     links: RefNode[];
   } = {
     tables: [],

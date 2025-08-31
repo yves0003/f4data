@@ -399,7 +399,7 @@ export class AddInfoTitleView<T> {
 }
 
 export function getHtmlForWeb(
-  csvData: EnumNode["members"],
+  csvData: EnumNode["allEnum"][0]["members"],
   title?: string
 ): string {
   if (csvData.length === 0) {
@@ -676,3 +676,10 @@ export const sortVars = (
   }
   return a.name.localeCompare(b.name);
 };
+
+export function addUniqueToArr<T>(arr: T[], obj: T, keys: (keyof T)[]) {
+  const exists = arr.some((item) => keys.every((k) => item[k] === obj[k]));
+  if (!exists) {
+    arr.push(obj);
+  }
+}
