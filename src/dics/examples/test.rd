@@ -27,8 +27,8 @@ table user_admin {
 	testament_user_dm varchar
 	job_status varchar
 }
-# Table des utilisateurs
-table test.ateliers as test {
+# Table des utilisateufrs é de travaux.
+table test.atelierds as test {
 	id integer tata test
 	titre varchar
 	date timestamp

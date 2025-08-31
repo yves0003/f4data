@@ -42,7 +42,8 @@ export const Spec: [
   [/^'(?:\\.|[^'])*'/, "STRING"],
   [/^"(?:\\.|[^"])*"/, "STRING"],
   // Keywords => gpt=[/^#.*/, "DEFINITION"],
-  [/^#.*\b/, "DEFINITION"],
+  //[/^#.*\b/, "DEFINITION"],
+  [/^#(.*)/, "DEFINITION"],
   [/^enum\b/i, "ENUM"],
   [/^table\b/i, "TABLE"],
   [/^ref\b/i, "REF"],
@@ -63,7 +64,8 @@ export const Spec: [
   [/^<>/, "RELATIONAL_OPERATOR"],
   [/^[><-]/, "RELATIONAL_OPERATOR"],
   // the rest
-  [/^\w+/, "IDENTIFIER"],
+  //[/^\w+/, "IDENTIFIER"],
+  [/^[\wáéíóúÁÉÍÓÚàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛäëïöüÄËÏÖÜ']+/, "IDENTIFIER"],
   [/\n/, "NEWLINE"],
 ];
 
