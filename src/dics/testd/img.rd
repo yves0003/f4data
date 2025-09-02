@@ -8,12 +8,7 @@ table users as us {
 	role varchar
 	'test id' integer [pk, "unique"]
 	created_at timestamp
-period: '2020 - 2022'
-name string [ "not null", invalid_setting ]
-	note: '''verification
-verification
-verification
-verification'''
+	name string [ "not null", invalid_setting ]
 }
 
 table yves {
@@ -37,18 +32,18 @@ ref : ateliers.id <> users.id
 ref : yves.id <> users.'test id'
 
 enum ateliers.List_Users {
-0 : Origination [note: '']
-1 : status at the beginning of the process [note: 'Waiting to be processed']
-2 : statut when activate [note: '']
-3 : status after completion [note: '']
-'failure error' : status when error occurs [note: '']
--1 : test [note: '']
+	0 : Origination [note: '']
+	1 : status at the beginning of the process [note: 'Waiting to be processed']
+	2 : statut when activate [note: '']
+	3 : status after completion [note: '']
+	'failure error' : status when error occurs [note: '']
+	-1 : test [note: '']
 }
 
 enum yves.titre {
-éton : status at the beginning of the process [note: 'Waiting to be processed']
-l'etak : revu  [note: '']
-2 : statut when activate [note: '']
-3 : status after completion [note: '']
-'failure error' : status when error occurs [note: '']
+	éton : status at the beginning of the process [note: 'Waiting to be processed']
+	toto : revu  [note: '']
+	2 : statut when activate [note: '']
+	test : status after completion [note: '']
+	'failure error' : status when error occurs [note: '']
 }

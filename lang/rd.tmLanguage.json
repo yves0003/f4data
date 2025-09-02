@@ -6,23 +6,21 @@
       "name": "comment.definition.rd"
     },
     {
-      "match": "(?i)\\b(table|enum|ref)\\b",
+      "match": "(?i)\\b(table|enum|ref|as)\\b",
       "name": "keyword.control.rd"
     },
     {
-      "match": "\\{",
-      "name": "punctuation.section.block.begin.rd"
+      "match": "<|>",
+      "name": "string.unquoted.rd"
     },
     {
-      "match": "\\}",
-      "name": "punctuation.section.block.end.rd"
-    },
-    {
-      "match": "^\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*:\\s*([^\\[]*?)\\s*(?:\\[(.*?)\\])?\\s*$",
+      "match": "^\\s*(?:'([^']+)'|\"([^\"]+)\"|([-áéíóúÁÉÍÓÚàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛäëïöüÄËÏÖÜA-Za-z0-9_]+))\\s*:\\s*([^\\[]*?)\\s*(?:\\[(.*?)\\])?\\s*$",
       "captures": {
-        "1": { "name": "constant.enum.key.rd" },
-        "2": { "name": "string.description.rd" },
-        "3": { "name": "meta.annotation.brackets.rd" }
+        "1": { "name": "constant.enum.key.single-quoted.rd" },
+        "2": { "name": "constant.enum.key.double-quoted.rd" },
+        "3": { "name": "constant.enum.key.rd" },
+        "4": { "name": "string.description.rd" },
+        "5": { "name": "meta.annotation.brackets.rd" }
       }
     },
     {

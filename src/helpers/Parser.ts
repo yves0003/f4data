@@ -128,7 +128,7 @@ export class Parser {
     // Parse description (after optional colon)
     if (this._lookahead?.type === "COLON") {
       this._eat("COLON");
-      description = this.collectTokensUntil(["LBRACKET", "NEWLINE", "RBRACE"]);
+      description = this.collectTokensUntil(["NEWLINE", "LBRACKET", "RBRACE"]);
       //description = this.collectTokensUntil(["LBRACKET", "NEWLINE"]);
     }
 

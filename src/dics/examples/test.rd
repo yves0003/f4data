@@ -28,7 +28,7 @@ table user_admin {
 }
 # Table des utilisateufrs é de travaux.
 table test.atelierds as test {
-	id integer tata test
+	id integer
 	titre varchar
 	date timestamp
 	# liste des utilisateurs de l'atelier
@@ -51,8 +51,8 @@ done : status after completion [note: '']
 }
 
 enum atelierds.titre {
-'test' : status at the beginning of the process[note: 'Waiting to be processed']
-running : statut when activate[note: '']
+'test' : status at the beginning of the process [note: 'Waiting to be processed']
+running : statut when activate [note: '']
 done : status after completion[note: '']
 'failure error' : status when error occurs[note: '']
 }
