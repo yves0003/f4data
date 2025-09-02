@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/yves0003/f4data.git"
   },
-  "version": "0.3.0",
+  "version": "0.3.1",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -30,7 +30,7 @@
     {
       "href": "https://yveszendja.com",
       "description": "badge version",
-      "url": "https://img.shields.io/badge/f4data-0.3.0-blue"
+      "url": "https://img.shields.io/badge/f4data-0.3.1-blue"
     }
   ],
   "activationEvents": [
@@ -275,7 +275,27 @@
           "group": "inline@1"
         }
       ]
-    }
+    },
+    "languages": [
+      {
+        "id": "rd",
+        "aliases": [
+          "RD Language",
+          "rd"
+        ],
+        "extensions": [
+          ".rd"
+        ],
+        "configuration": "./lang/language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "rd",
+        "scopeName": "source.rd",
+        "path": "./lang/rd.tmLanguage.json"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run build:webview && npm run build:websearch && npm run compile",

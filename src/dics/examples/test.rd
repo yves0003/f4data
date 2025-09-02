@@ -18,7 +18,6 @@ verification'''
 table yves_gaetabt_ {
 	identifiant num
 }
-
 table user_admin {
 	id integer tata test
 	titre varchar
@@ -40,17 +39,19 @@ ref : ateliers.list_users > users.id
 ref : ateliers.id <> users.id
 ref : yves.id <> users.'test id'
 
-enum user_admin.job_status 
+enum user_admin.job_status {
+red : test
+}
 
-user_admin.list_users atelierds.id{
-created : status at the beginning of the process[note: 'Waiting to be processed']
-running : statut when activate[note: '']
-done : status after completion[note: '']
+enum user_admin.list_users atelierds.id {
+created : status at the beginning of the process [note: 'Waiting to be processed']
+running : statut when activate [note: '']
+done : status after completion [note: '']
 'failure error' : status when error occurs[note: '']
 }
 
 enum atelierds.titre {
-created : status at the beginning of the process[note: 'Waiting to be processed']
+'test' : status at the beginning of the process[note: 'Waiting to be processed']
 running : statut when activate[note: '']
 done : status after completion[note: '']
 'failure error' : status when error occurs[note: '']

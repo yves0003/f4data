@@ -1,0 +1,36 @@
+{
+  "scopeName": "source.rd",
+  "patterns": [
+    {
+      "match": "#.*$",
+      "name": "comment.definition.rd"
+    },
+    {
+      "match": "(?i)\\b(table|enum|ref)\\b",
+      "name": "keyword.control.rd"
+    },
+    {
+      "match": "\\{",
+      "name": "punctuation.section.block.begin.rd"
+    },
+    {
+      "match": "\\}",
+      "name": "punctuation.section.block.end.rd"
+    },
+    {
+      "match": "^\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*:\\s*([^\\[]*?)\\s*(?:\\[(.*?)\\])?\\s*$",
+      "captures": {
+        "1": { "name": "constant.enum.key.rd" },
+        "2": { "name": "string.description.rd" },
+        "3": { "name": "meta.annotation.brackets.rd" }
+      }
+    },
+    {
+      "match": "^\\s*([A-Za-z_][A-Za-z0-9_]*)\\s+([A-Za-z_][A-Za-z0-9_]*)(?:\\s+.*)?$",
+      "captures": {
+        "1": { "name": "variable.other.rd" },
+        "2": { "name": "storage.type.rd" }
+      }
+    }
+  ]
+}
