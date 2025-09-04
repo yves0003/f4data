@@ -136,7 +136,6 @@ export class Parser {
     if (this._lookahead?.type === "LBRACKET") {
       note = this.parseNote2();
     }
-
     if (this._lookahead?.type === "NEWLINE") {
       this._eat("NEWLINE");
     }
@@ -146,9 +145,11 @@ export class Parser {
 
   private collectTokensUntil(stopTypes: string[]): string {
     let tokens = "";
+    let line = this._lookahead?.line;
     while (
       this._lookahead &&
-      !stopTypes.includes(this._lookahead.type as string)
+      !stopTypes.includes(this._lookahead.type as string) &&
+      line === this._lookahead.line
     ) {
       const token = this._eat(this._lookahead.type);
       if (token) {

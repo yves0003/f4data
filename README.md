@@ -1,4 +1,4 @@
-![f4data](https://img.shields.io/badge/f4data-0.3.2-blue)
+![f4data](https://img.shields.io/badge/f4data-0.3.3-blue)
 
 > 📊 f4data brings your data dictionary into VS Code. Instantly explore dictionaries, tables, variable definitions, and documentation — right in your editor. Ideal for credit analysts, quants, and model risk teams focused on model and onboarding.
 

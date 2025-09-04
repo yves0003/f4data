@@ -45,14 +45,14 @@ red : test
 
 enum user_admin.list_users atelierds.id {
 created : status at the beginning of the process [note: 'Waiting to be processed']
-running : statut when activate [note: '']
-done : status after completion [note: '']
-'failure error' : status when error occurs[note: '']
+running : statut when activate
+done : status after completion
+'failure error' : status when error occurs
 }
 
 enum atelierds.titre {
-'test' : status at the beginning of the process [note: 'Waiting to be processed']
-running : statut when activate [note: '']
-done : status after completion[note: '']
-'failure error' : status when error occurs[note: '']
+'test' : status at the beginning of the process ders
+running : statut when activate
+done : status after completion
+'failure error' : status when error occurs
 }
