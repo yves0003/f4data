@@ -22,6 +22,11 @@ import { SearchPanelDiag } from "./panels/searchPanel";
 import { updateContextBasedOnConfig } from "./utilities/updateContextBasedOnConfig";
 import { parseFileInWorker } from "./workers/parseFileInWorker";
 import { jsonToExcelTable } from "./helpers/jsonToExcelTable";
+import { refreshDictsDir } from "./commands/refreshDictsDir";
+import {
+  getAllGlobalState,
+  updateGlobalState,
+} from "./helpers/getAllGlobalKeys";
 
 interface State {
   title: string;
@@ -55,8 +60,17 @@ const upsert = function (
 };
 
 export async function activate(context: vscode.ExtensionContext) {
-  const config = vscode.workspace.getConfiguration("f4data");
-  updateContextBasedOnConfig(config);
+  //const config = vscode.workspace.getConfiguration("f4data");
+  const alldict = context.globalState.get("f4data.list") as
+    | listDico
+    | undefined;
+  const snipDir = context.globalState.get("f4data.snippetPath") as
+    | string
+    | undefined;
+  //updateContextBasedOnConfig(config);
+  //console.log(config.get("list"), "extension config");
+  //console.log(getAllGlobalState(context), "extension context");
+
   let selectedDic: OutputTable[] = [];
   let selectedTab: string = "";
   let allMappDic: EnumNodeElt[];
@@ -67,13 +81,11 @@ export async function activate(context: vscode.ExtensionContext) {
     links: RefNode[];
   } = { name: "", tables: [], mappings: [], links: [] };
   let listVarTabsInfo: OutputTable | undefined;
-
-  const dictionaryProvider = new DictionaryProvider();
+  const dictionaryProvider = new DictionaryProvider(context);
   const dicListView = vscode.window.createTreeView("dic-list", {
     treeDataProvider: dictionaryProvider,
   });
   dictionaryProvider.setView(dicListView);
-
   const dicTabProvider = new DicTabProvider();
   const dicTabVarProvider = new DicTabVarProvider();
   const docProvider = new DocProvider();
@@ -88,34 +100,34 @@ export async function activate(context: vscode.ExtensionContext) {
   const refreshAll = vscode.commands.registerCommand(
     "f4data.refreshAll",
     async () => {
-      vscode.window.showInformationMessage("Actualisé!!!!");
-      dicTabProvider.setData([]);
-      dicTabVarProvider.setData([]);
-      docProvider.setData([]);
-      mapProvider.setDataAndUpdateContent([], "");
-      title_tab.setTitle("Tables");
-      title_var.setTitle(`Variables`);
-      selectedDic = [];
-      selectedTab = "";
-      listVarTabsInfo = undefined;
-      listTabsInfo = { name: "", tables: [], mappings: [], links: [] };
-      vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
+      const listDict = await refreshDictsDir(context);
+      if (listDict) {
+        dictionaryProvider.setData([]);
+        dicTabProvider.setData([]);
+        dicTabVarProvider.setData([]);
+        docProvider.setData([]);
+        mapProvider.setDataAndUpdateContent([], "");
+        title_tab.setTitle("Tables");
+        title_var.setTitle(`Variables`);
+        selectedDic = [];
+        selectedTab = "";
+        listVarTabsInfo = undefined;
+        listTabsInfo = { name: "", tables: [], mappings: [], links: [] };
+        vscode.window.showInformationMessage("Actualisé !!!!");
+        vscode.commands.executeCommand(
+          "workbench.action.focusActiveEditorGroup"
+        );
+        //dictionaryProvider.refresh();
+      } else {
+        vscode.window.showErrorMessage("Error : Actualisation!!!!");
+      }
     }
   );
   const commandAddDictionaries = vscode.commands.registerCommand(
     "f4data.addDictionaries",
     async () => {
-      // The code you place here will be executed every time your command is executed
       const state = {} as Partial<State>;
       state.link = await addAllDictionaries();
-      // state.link = await addDictionaries({
-      //   title: "Create a new dictionary",
-      //   value: "",
-      //   placeholder: "Choose a link",
-      //   prompt: "Choose a link",
-      //   validate: validateLinkExistOrIsUnique,
-      //   shouldResume: shouldResume,
-      // });
       if (!state.link) {
         return;
       }
@@ -124,22 +136,31 @@ export async function activate(context: vscode.ExtensionContext) {
       const snippetlink = list_snippet.find((e) =>
         e.filename.toLowerCase().includes("sas")
       );
-
-      const savedDictionaries = config.get("list") as listDico;
-
+      //const savedDictionaries = config.get("list") as listDico;
+      const savedDictionaries = (getAllGlobalState(context)["f4data.list"] ||
+        []) as listDico;
       for (const dict of list_dics) {
         const dictToAdd = { name: dict.filename, link: dict.filePath };
-        await config.update(
-          "list",
-          upsert(savedDictionaries, "name", dictToAdd),
-          true
+        // await config.update(
+        //   "list",
+        //   upsert(savedDictionaries, "name", dictToAdd),
+        //   vscode.ConfigurationTarget.Global
+        // );
+        const globalStateUpdate = updateGlobalState(context);
+        await globalStateUpdate(
+          "f4data.list",
+          upsert(savedDictionaries, "name", dictToAdd)
         );
       }
-
       if (snippetlink) {
-        await config.update("snippetPath", snippetlink.filePath, true);
+        // await config.update(
+        //   "snippetPath",
+        //   snippetlink.filePath,
+        //   vscode.ConfigurationTarget.Global
+        // );
+        const globalStateUpdate = updateGlobalState(context);
+        await globalStateUpdate("f4data.snippetPath", snippetlink);
       }
-
       dictionaryProvider.refresh();
     }
   );
@@ -403,16 +424,16 @@ export async function activate(context: vscode.ExtensionContext) {
   vscode.window.registerTreeDataProvider("dic-vars", dicTabVarProvider);
   vscode.window.registerTreeDataProvider("dic-docs", docProvider);
 
-  vscode.workspace.onDidChangeConfiguration((e) => {
-    if (e.affectsConfiguration("f4data.snippetPath")) {
-      vscode.window.showInformationMessage(
-        "SAS snippet path updated. Please reload the window to apply."
-      );
-    }
-    if (e.affectsConfiguration("f4data.list")) {
-      updateContextBasedOnConfig(config);
-    }
-  });
+  // vscode.workspace.onDidChangeConfiguration((e) => {
+  //   if (e.affectsConfiguration("f4data.snippetPath")) {
+  //     vscode.window.showInformationMessage(
+  //       "SAS snippet path updated. Please reload the window to apply."
+  //     );
+  //   }
+  //   if (e.affectsConfiguration("f4data.list")) {
+  //     updateContextBasedOnConfig(config);
+  //   }
+  // });
 
   return {
     extendMarkdownIt(md: any) {
@@ -424,4 +445,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export async function deactivate(): Promise<void> {
+  const config = vscode.workspace.getConfiguration("f4data");
+  await config.update("list", [], vscode.ConfigurationTarget.Global);
+}

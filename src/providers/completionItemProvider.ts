@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
+import { getAllGlobalState } from "../helpers/getAllGlobalKeys";
 
 type Snippet = {
   [x: string]: {
@@ -10,8 +11,12 @@ type Snippet = {
 };
 
 export const completionItemProvider = (context: vscode.ExtensionContext) => {
-  const config = vscode.workspace.getConfiguration("f4data");
-  const snippetPath = config.get<string>("snippetPath");
+  //const config = vscode.workspace.getConfiguration("f4data");
+  //const snippetPath = config.get<string>("snippetPath");
+  const snippetPath = getAllGlobalState(context)[
+    "f4data.snippetPath"
+  ] as string;
+
   let snippets: Snippet = {};
 
   try {

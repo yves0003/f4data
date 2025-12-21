@@ -3,7 +3,7 @@
 # Table des utilisateurs
 table users as us {
 	id integer [pk, "unique"]
-	'test id' integer [pk, "unique"]
+	'test id' integer ["unique", pk]
 	username varchar
 	role varchar
 	created_at timestamp
@@ -44,14 +44,14 @@ red : test
 }
 
 enum user_admin.list_users atelierds.id {
-created : status at the beginning of the process [note: 'Waiting to be processed']
+created : status at the beginning of the process [note: "Waiting to be processed's"]
 running : statut when activate
 done : status after completion
 'failure error' : status when error occurs
 }
 
 enum atelierds.titre {
-'test' : status at the beginning of the process ders
+'test' : status at the beginning of the process
 running : statut when activate
 done : status after completion
 'failure error' : status when error occurs

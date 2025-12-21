@@ -1,48 +1,9 @@
 import { QuickInputButtons, window } from "vscode";
-import {
-  getFilesByExtension,
-  InputFlowAction,
-  shouldResume,
-  validateLinkExistOrIsUnique,
-} from "../helpers/helpers";
+import { InputFlowAction } from "../helpers/helpers";
 import * as vscode from "vscode";
 import { find, indexOf } from "lodash";
 
-interface State {
-  title: string;
-  name: string;
-  link: string;
-}
 type keytouse = "name" | "link";
-
-export function addDictionariesn(state: Partial<State>): Promise<string> {
-  const config = vscode.workspace.getConfiguration("f4data");
-  return new Promise(async (resolve, reject) => {
-    state.link = await addDictionaries({
-      title: "Create a new dictionary",
-      value: "",
-      placeholder: "Choose a link",
-      prompt: "Choose a link",
-      validate: validateLinkExistOrIsUnique,
-      shouldResume: shouldResume,
-    });
-    vscode.window.showInformationMessage(`${state.link}`);
-    if (!state.link) {
-      return;
-    }
-    const list_dics = await getFilesByExtension(state.link, "rd");
-    const savedDictionaries = config.get("list") as listDico;
-
-    for (const dict of list_dics) {
-      const dictToAdd = { name: dict.filename, link: dict.filePath };
-      await config.update(
-        "list",
-        upsert(savedDictionaries, "name", dictToAdd),
-        true
-      );
-    }
-  });
-}
 
 export async function addAllDictionaries() {
   try {
@@ -112,7 +73,7 @@ export async function addDictionaries<P extends InputBoxParameters>({
     window.showErrorMessage("error.addDictionaries");
   }
 }
-function upsert(
+export function upsert(
   arr: listDico,
   keyToUse: keytouse,
   newval: Partial<listDico[0]>

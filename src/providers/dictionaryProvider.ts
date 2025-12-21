@@ -11,6 +11,11 @@ import {
   TreeView,
 } from "vscode";
 import { directoryExists, validateNameIsUnique } from "../helpers/helpers";
+import * as vscode from "vscode";
+import {
+  getAllGlobalState,
+  updateGlobalState,
+} from "../helpers/getAllGlobalKeys";
 
 export class Dictionary extends TreeItem {
   constructor(
@@ -30,7 +35,10 @@ export class Dictionary extends TreeItem {
 export class DictionaryProvider implements TreeDataProvider<Dictionary> {
   private view?: TreeView<Dictionary>;
   data: Dictionary[];
-  constructor() {
+  private context: vscode.ExtensionContext;
+
+  constructor(context: vscode.ExtensionContext) {
+    this.context = context;
     const dictionaries = this.getDictionaryInfos();
     if (dictionaries && dictionaries.length > 0) {
       this.data = dictionaries.map((dico) => new Dictionary(dico.name || ""));
@@ -46,8 +54,11 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
     this._onDidChangeTreeData.event;
 
   private getDictionaryInfos() {
-    const config = workspace.getConfiguration("f4data");
-    const dictionaries: listDico | undefined = config.get("list");
+    //const config = workspace.getConfiguration("f4data");
+    //const dictionaries: listDico | undefined = config.get("list");
+    const dictionaries = getAllGlobalState(this.context)[
+      "f4data.list"
+    ] as listDico;
     return dictionaries;
   }
   getTreeItem(element: Dictionary): Dictionary {
@@ -72,13 +83,20 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
   getParent(element: Dictionary): Dictionary | undefined {
     return element.parent;
   }
-  setData(): void {
-    const dictionaries = this.getDictionaryInfos();
-    if (dictionaries && dictionaries.length > 0) {
-      let newData = dictionaries.map((dico) => new Dictionary(dico.name || ""));
-      if (newData.length !== this.data.length) {
-        this.data = newData;
-        this._onDidChangeTreeData.fire();
+  setData(data: Dictionary[] | undefined): void {
+    if (data && data.length === 0) {
+      this.data = [];
+      this._onDidChangeTreeData.fire();
+    } else {
+      const dictionaries = this.getDictionaryInfos();
+      if (dictionaries && dictionaries.length > 0) {
+        let newData = dictionaries.map(
+          (dico) => new Dictionary(dico.name || "")
+        );
+        if (newData.length !== this.data.length) {
+          this.data = newData;
+          this._onDidChangeTreeData.fire();
+        }
       }
     }
   }
@@ -121,12 +139,22 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
       "No"
     );
     if (confirm === "Yes") {
-      const config = workspace.getConfiguration("f4data");
-      const dictionaries = config.get("list") as listDico;
+      const dictionaries = getAllGlobalState(this.context)[
+        "f4data.list"
+      ] as listDico;
+
+      //const config = workspace.getConfiguration("f4data");
+      //const dictionaries = config.get("list") as listDico;
       const dictTokeep = dictionaries.filter(
         (dict) => dict.name !== item.label
       );
-      await config.update("list", dictTokeep, true);
+      // await config.update(
+      //   "list",
+      //   dictTokeep,
+      //   vscode.ConfigurationTarget.Global
+      // );
+      const globalStateUpdate = updateGlobalState(this.context);
+      await globalStateUpdate("f4data.list", dictTokeep);
     }
   }
   async on_rename_item(item: Dictionary) {
@@ -143,7 +171,9 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
     try {
       await new Promise<string | undefined>((resolve) => {
         input.onDidChangeValue(async (text) => {
-          const validationMessage = await validateNameIsUnique(text);
+          const validationMessage = await validateNameIsUnique(this.context)(
+            text
+          );
           if (validationMessage !== undefined) {
             input.validationMessage = validationMessage;
           }
@@ -152,20 +182,30 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
           const value = input.value;
           input.enabled = false;
           input.busy = true;
-          const validationMessage = await validateNameIsUnique(value);
+          const validationMessage = await validateNameIsUnique(this.context)(
+            value
+          );
           if (validationMessage !== undefined) {
             resolve(undefined);
             input.validationMessage = validationMessage;
             await new Promise((resolve) => setTimeout(resolve, 1000));
             //input.hide();
           } else {
-            const config = workspace.getConfiguration("f4data");
-            const dictionaries = config.get("list") as listDico;
+            const dictionaries = getAllGlobalState(this.context)[
+              "f4data.list"
+            ] as listDico;
+            //const config = workspace.getConfiguration("f4data");
+            //const dictionaries = config.get("list") as listDico;
             const dictUpdated = dictionaries.map((dic) =>
               dic.name === item.label ? { ...dic, name: value } : dic
             );
-            await config.update("list", dictUpdated, true);
-
+            // await config.update(
+            //   "list",
+            //   dictUpdated,
+            //   vscode.ConfigurationTarget.Global
+            // );
+            const globalStateUpdate = updateGlobalState(this.context);
+            await globalStateUpdate("f4data.list", dictUpdated);
             resolve(value);
             input.hide();
           }
@@ -183,8 +223,11 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
     if (item.label === undefined || "") {
       window.showErrorMessage(`Error: Open Work Directory not defined`);
     }
-    const config = workspace.getConfiguration("f4data");
-    const dictionaries = config.get("list") as listDico;
+    const dictionaries = getAllGlobalState(this.context)[
+      "f4data.list"
+    ] as listDico;
+    //const config = workspace.getConfiguration("f4data");
+    //const dictionaries = config.get("list") as listDico;
     const selected_config = dictionaries.find(
       (dict) => dict.name === item.label
     );
@@ -201,8 +244,11 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
     if (item.label === undefined || "") {
       return;
     }
-    const config = workspace.getConfiguration("f4data");
-    const dictionaries = config.get("list") as listDico;
+    const dictionaries = getAllGlobalState(this.context)[
+      "f4data.list"
+    ] as listDico;
+    //const config = workspace.getConfiguration("f4data");
+    //const dictionaries = config.get("list") as listDico;
     const selected_config = dictionaries.find(
       (dict) => dict.name === item.label
     );
@@ -239,7 +285,13 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
               const dictUpdated = dictionaries.map((dic) =>
                 dic.name === item.label ? { ...dic, work_dir: value } : dic
               );
-              await config.update("list", dictUpdated, true);
+              // await config.update(
+              //   "list",
+              //   dictUpdated,
+              //   vscode.ConfigurationTarget.Global
+              // );
+              const globalStateUpdate = updateGlobalState(this.context);
+              await globalStateUpdate("f4data.list", dictUpdated);
 
               resolve(value);
               input.hide();

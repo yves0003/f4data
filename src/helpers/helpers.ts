@@ -4,6 +4,8 @@ import { TreeDataProvider, TreeView, window, workspace } from "vscode";
 import path from "path";
 import * as readline from "readline/promises";
 import { EnumNode, OutputTable } from "./ast_to_data";
+import { getAllGlobalState } from "./getAllGlobalKeys";
+import * as vscode from "vscode";
 
 interface FileInfo {
   directory: string;
@@ -125,38 +127,45 @@ export const slugify = (str: string) => {
   return str;
 };
 
-export async function validateNameIsUnique(name: string) {
-  if (name === "") {
-    return "Empty value";
-  }
-  const config = workspace.getConfiguration("f4data");
-  const dictionaries = config.get("list") as listDico;
-  const findDic = dictionaries.find((dict) => dict.name === name);
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return findDic !== undefined ? "Name is already used" : undefined;
-}
-
-export async function validateLinkExistOrIsUnique(link_sel: string) {
-  const link = link_sel;
-  const isUrl = isValidURL(link);
-  if (!isUrl) {
-    const existDir = await directoryExists(link);
-    if (existDir) {
-      const config = workspace.getConfiguration("f4data");
-      const dictionaries = config.get("list") as listDico;
-      const findDic = dictionaries.find((dict) => dict.link === link);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return findDic !== undefined
-        ? `Link is already assign to ${findDic.name}`
-        : undefined;
-    } else {
-      return "The directory not exists toto";
+export function validateNameIsUnique(context: vscode.ExtensionContext) {
+  return async function (name: string) {
+    if (name === "") {
+      return "Empty value";
     }
-  } else {
-    return "You entered an URL!!!";
-  }
+    const dictionaries = getAllGlobalState(context)["f4data.list"] as listDico;
+    //const config = workspace.getConfiguration("f4data");
+    //const dictionaries = config.get("list") as listDico;
+    const findDic = dictionaries.find((dict) => dict.name === name);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return findDic !== undefined ? "Name is already used" : undefined;
+  };
 }
 
+export function validateLinkExistOrIsUnique(context: vscode.ExtensionContext) {
+  return async function (link_sel: string) {
+    const link = link_sel;
+    const isUrl = isValidURL(link);
+    if (!isUrl) {
+      const existDir = await directoryExists(link);
+      if (existDir) {
+        //const config = workspace.getConfiguration("f4data");
+        //const dictionaries = config.get("list") as listDico;
+        const dictionaries = getAllGlobalState(context)[
+          "f4data.list"
+        ] as listDico;
+        const findDic = dictionaries.find((dict) => dict.link === link);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return findDic !== undefined
+          ? `Link is already assign to ${findDic.name}`
+          : undefined;
+      } else {
+        return "The directory not exists toto";
+      }
+    } else {
+      return "You entered an URL!!!";
+    }
+  };
+}
 export function shouldResume() {
   // Could show a notification with the option to resume.
   return new Promise<boolean>((resolve, reject) => {
@@ -375,9 +384,12 @@ export class AddInfoTitleView<T> {
   setMessage = (message: string) => {
     this.#myTreeView.message = message;
   };
-  setBadge = async () => {
+  setBadge = async (context: vscode.ExtensionContext) => {
     const config = workspace.getConfiguration("f4data");
-    const dictionaries: listDico | undefined = config.get("list");
+    //const dictionaries= config.get("list");
+    const dictionaries: listDico | undefined = getAllGlobalState(context)[
+      "f4data.list"
+    ] as listDico;
     const listLastUpdated = await findAllLastUpdateFiles(
       dictionaries?.map((dic) => dic.link || "")
     );

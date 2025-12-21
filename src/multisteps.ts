@@ -13,6 +13,11 @@ import {
   validateLinkExistOrIsUnique,
   validateNameIsUnique,
 } from "./helpers/helpers";
+import * as vscode from "vscode";
+import {
+  getAllGlobalState,
+  updateGlobalState,
+} from "./helpers/getAllGlobalKeys";
 type keytouse = "name" | "link";
 
 const upsert = function (
@@ -182,7 +187,7 @@ export async function multistep(context: ExtensionContext) {
       value: state.name || "",
       placeholder: "Choose a unique name",
       prompt: "Choose a unique name",
-      validate: validateNameIsUnique,
+      validate: validateNameIsUnique(context),
       shouldResume: shouldResume,
     });
     return (input: MultiStepInput) => inputLink(input, state);
@@ -196,14 +201,24 @@ export async function multistep(context: ExtensionContext) {
       value: "",
       placeholder: "Choose a link to the dictionary",
       prompt: "Choose a link to the dictionary",
-      validate: validateLinkExistOrIsUnique,
+      validate: validateLinkExistOrIsUnique(context),
       shouldResume: shouldResume,
     });
     window.showInformationMessage(`${state.link}`);
-    const config = workspace.getConfiguration("f4data");
-    const dictionaries = config.get("list") as listDico;
+    //const config = workspace.getConfiguration("f4data");
+    //const dictionaries = config.get("list") as listDico;
+    const dictionaries = getAllGlobalState(context)["f4data.list"] as listDico;
     const dictToAdd = { name: state.name, link: state.link };
-    await config.update("list", upsert(dictionaries, "name", dictToAdd), true);
+    // await config.update(
+    //   "list",
+    //   upsert(dictionaries, "name", dictToAdd),
+    //   vscode.ConfigurationTarget.Global
+    // );
+    const globalStateUpdate = updateGlobalState(context);
+    await globalStateUpdate(
+      "f4data.list",
+      upsert(dictionaries, "name", dictToAdd)
+    );
   }
 
   const state = await collectInputs();
