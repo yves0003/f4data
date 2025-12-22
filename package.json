@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/yves0003/f4data.git"
   },
-  "version": "0.4.2",
+  "version": "0.4.3",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -30,7 +30,7 @@
     {
       "href": "https://yveszendja.com",
       "description": "badge version",
-      "url": "https://img.shields.io/badge/f4data-0.4.2-blue"
+      "url": "https://img.shields.io/badge/f4data-0.4.3-blue"
     }
   ],
   "activationEvents": [

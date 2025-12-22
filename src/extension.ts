@@ -159,7 +159,7 @@ export async function activate(context: vscode.ExtensionContext) {
         //   vscode.ConfigurationTarget.Global
         // );
         const globalStateUpdate = updateGlobalState(context);
-        await globalStateUpdate("f4data.snippetPath", snippetlink);
+        await globalStateUpdate("f4data.snippetPath", snippetlink.filePath);
       }
       dictionaryProvider.refresh();
     }

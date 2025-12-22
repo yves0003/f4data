@@ -25,7 +25,9 @@ export const completionItemProvider = (context: vscode.ExtensionContext) => {
       snippets = JSON.parse(content);
     } else {
       vscode.window.showErrorMessage(
-        `SAS snippet file not found: ${snippetPath}`
+        `SAS snippet file not found: ${
+          !snippetPath ? "No directory" : "File not exists"
+        }`
       );
     }
   } catch (error) {
