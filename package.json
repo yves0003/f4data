@@ -46,42 +46,23 @@
     "configuration": {
       "title": "f4data",
       "properties": {
-        "f4data.list": {
-          "type": "array",
-          "default": [],
-          "scope": "window",
-          "description": "list of dictionary",
-          "items": {
-            "type": "object",
-            "title": "dictionary",
-            "properties": {
-              "name": {
-                "type": "string",
-                "description": "Name of the dictionary"
-              },
-              "link": {
-                "type": "string",
-                "description": "Link to the directory of the dictionary"
-              },
-              "file": {
-                "type": "string",
-                "description": "file name of the dictionary"
-              },
-              "work_dir": {
-                "type": "string",
-                "description": "Working directory where the dictionary can be used"
-              }
-            }
-          }
-        },
-        "f4data.snippetPath": {
+        "f4data.excel.tableHeaderExcelColor.default": {
           "type": "string",
-          "default": "",
-          "description": "Full path to your custom SAS snippet JSON file"
+          "format": "color",
+          "default": "#4F81BD",
+          "description": "Header color for default tables"
         },
-        "f4data.listEmpty": {
-          "type": "boolean",
-          "default": true
+        "f4data.excel.tableHeaderExcelColor.tables": {
+          "type": "string",
+          "format": "color",
+          "default": "#F79646",
+          "description": "Header color for tables sheets"
+        },
+        "f4data.excel.tableHeaderExcelColor.mapping": {
+          "type": "string",
+          "format": "color",
+          "default": "#9BBB59",
+          "description": "Header color for mapping sheets"
         }
       }
     },
@@ -95,6 +76,11 @@
         "command": "f4data.mapWebview",
         "title": "Display Webview",
         "icon": "$(link)"
+      },
+      {
+        "command": "f4data.exportToExcel",
+        "title": "Export Xlsx",
+        "icon": "$(save)"
       },
       {
         "command": "f4data.addDictionaries",
@@ -201,7 +187,6 @@
       {
         "id": "dic-welcome",
         "contents": "👋 Bienvenue sur f4data.\nSélectionner le répertoire du dictionnaire que vous souhaitez afficher.\n[Ajouter un dictionnaire](command:f4data.addDictionaries)",
-        "when": "config.f4data.listEmpty",
         "view": "dic-list"
       }
     ],
@@ -210,15 +195,15 @@
         {
           "command": "f4data.refreshAll",
           "when": "view == dic-list",
-          "group": "navigation@1"
-        },
-        {
-          "command": "f4data.refreshAll",
-          "when": "view == f4data.openview",
-          "group": "navigation@1"
+          "group": "navigation@3"
         },
         {
           "command": "f4data.addDictionaries",
+          "when": "view == dic-list",
+          "group": "navigation@2"
+        },
+        {
+          "command": "f4data.exportToExcel",
           "when": "view == dic-list",
           "group": "navigation@1"
         },
@@ -323,6 +308,7 @@
   },
   "dependencies": {
     "csv-parse": "^5.6.0",
+    "exceljs": "^4.4.0",
     "lodash": "^4.17.21",
     "markdown-it-collapsible": "^2.0.2",
     "markdown-it-highlightjs": "^4.2.0",

@@ -42,8 +42,17 @@ export class CanvasLayoutManager {
     };
   }
 
+  private getColsNeeded(element: ElementDimensions): number {
+    return Math.ceil((element.width + this.padding) / this.cellSize);
+  }
+
+  private getRowsNeeded(element: ElementDimensions): number {
+    return Math.ceil((element.height + this.padding) / this.cellSize);
+  }
+
   positionElement(element: ElementDimensions): LayoutPosition {
-    const elementHeightInCells = Math.ceil(element.height / this.cellSize);
+    //const elementHeightInCells = Math.ceil(element.height / this.cellSize);
+    const elementHeightInCells = this.getRowsNeeded(element);
     const canvasHeightInCells = this.grid.length;
 
     // If element is taller than canvas, start from top and fill available height
@@ -89,8 +98,8 @@ export class CanvasLayoutManager {
   }
 
   private fitsTallElement(col: number, element: ElementDimensions): boolean {
-    const colsNeeded = Math.ceil(element.width / this.cellSize);
-
+    //const colsNeeded = Math.ceil(element.width / this.cellSize);
+    const colsNeeded = this.getColsNeeded(element);
     // Check if we have enough horizontal space
     if (col + colsNeeded > this.grid[0].length) {
       return false;
@@ -108,8 +117,8 @@ export class CanvasLayoutManager {
   }
 
   private placeTallElement(col: number, element: ElementDimensions): void {
-    const colsNeeded = Math.ceil(element.width / this.cellSize);
-
+    //const colsNeeded = Math.ceil(element.width / this.cellSize);
+    const colsNeeded = this.getColsNeeded(element);
     // Mark all cells in these columns as occupied for full height
     for (let i = 0; i < this.grid.length; i++) {
       for (let j = col; j < col + colsNeeded; j++) {
@@ -155,8 +164,10 @@ export class CanvasLayoutManager {
   }
 
   private fits(element: ElementDimensions, col: number, row: number): boolean {
-    const colsNeeded = Math.ceil(element.width / this.cellSize);
-    const rowsNeeded = Math.ceil(element.height / this.cellSize);
+    //const colsNeeded = Math.ceil(element.width / this.cellSize);
+    const colsNeeded = this.getColsNeeded(element);
+    //const rowsNeeded = Math.ceil(element.height / this.cellSize);
+    const rowsNeeded = this.getRowsNeeded(element);
 
     for (let i = row; i < row + rowsNeeded; i++) {
       for (let j = col; j < col + colsNeeded; j++) {
@@ -177,8 +188,10 @@ export class CanvasLayoutManager {
     col: number,
     row: number
   ): void {
-    const colsNeeded = Math.ceil(element.width / this.cellSize);
-    const rowsNeeded = Math.ceil(element.height / this.cellSize);
+    //const colsNeeded = Math.ceil(element.width / this.cellSize);
+    const colsNeeded = this.getColsNeeded(element);
+    //const rowsNeeded = Math.ceil(element.height / this.cellSize);
+    const rowsNeeded = this.getRowsNeeded(element);
 
     for (let i = row; i < row + rowsNeeded; i++) {
       for (let j = col; j < col + colsNeeded; j++) {

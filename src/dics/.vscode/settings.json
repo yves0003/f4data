@@ -1,28 +1,4 @@
 {
-    "f4data.list": [
-        {
-            "name": "img",
-            "link": "/Users/yvez/Desktop/github.com/vscode_ext/f4data/src/dics/testd/img.rd"
-        },
-        {
-            "name": "test",
-            "link": "/Users/yvez/Desktop/github.com/vscode_ext/f4data/src/dics/examples/test.rd"
-        },
-        {
-            "name": "test-yt",
-            "link": "/Users/yvez/Desktop/github.com/vscode_ext/f4data/src/dics/examples/test-yt.rd"
-        },
-        {
-            "name": "testyt",
-            "link": "/Users/yvez/Desktop/github.com/vscode_ext/f4data/src/dics/examples/testyt.rd"
-        },
-        {
-            "name": "testytyu",
-            "link": "/Users/yvez/Desktop/github.com/vscode_ext/f4data/src/dics/examples/testytyu.rd"
-        },
-        {
-            "name": "yves",
-            "link": "/Users/yvez/Desktop/github.com/vscode_ext/f4data/src/dics/test/yves.rd"
-        }
-    ]
+    "f4data.list": null,
+    "f4data.snippetPath": null
 }

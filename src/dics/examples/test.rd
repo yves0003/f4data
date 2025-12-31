@@ -18,7 +18,7 @@ verification'''
 table yves_gaetabt_ {
 	identifiant num
 }
-table user_admin {
+table user_admin-10 {
 	id integer tata test
 	titre varchar
 	date timestamp
@@ -27,7 +27,7 @@ table user_admin {
 	job_status varchar
 }
 # Table des utilisateufrs é de travaux.
-table test.atelierds as test {
+table test.ateliers as test {
 	id integer
 	titre varchar
 	date timestamp
@@ -36,14 +36,14 @@ table test.atelierds as test {
 }
 
 ref : ateliers.list_users > users.id
-ref : ateliers.id <> users.id
+ref : ateliers.id - users.id
 ref : yves.id <> users.'test id'
 
-enum user_admin.job_status {
+enum user_admin-10.job_status {
 red : test
 }
 
-enum user_admin.list_users atelierds.id {
+enum user_admin-10.list_users atelierds.id {
 created : status at the beginning of the process [note: "Waiting to be processed's"]
 running : statut when activate
 done : status after completion

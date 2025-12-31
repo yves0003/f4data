@@ -27,6 +27,7 @@ import {
   getAllGlobalState,
   updateGlobalState,
 } from "./helpers/getAllGlobalKeys";
+import { exportToExcel } from "./commands/exportToExcel";
 
 interface State {
   title: string;
@@ -61,6 +62,8 @@ const upsert = function (
 
 export async function activate(context: vscode.ExtensionContext) {
   //const config = vscode.workspace.getConfiguration("f4data");
+  //await config.update("snippetPath", null);
+  //console.log(config, "config.f4data");
   const alldict = context.globalState.get("f4data.list") as
     | listDico
     | undefined;
@@ -123,6 +126,12 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     }
   );
+  const commandExportToExcel = vscode.commands.registerCommand(
+    "f4data.exportToExcel",
+    async () => {
+      await exportToExcel(context);
+    }
+  );
   const commandAddDictionaries = vscode.commands.registerCommand(
     "f4data.addDictionaries",
     async () => {
@@ -160,6 +169,9 @@ export async function activate(context: vscode.ExtensionContext) {
         // );
         const globalStateUpdate = updateGlobalState(context);
         await globalStateUpdate("f4data.snippetPath", snippetlink.filePath);
+        vscode.window.showInformationMessage(
+          "SAS snippet path updated. Please reload the window to apply."
+        );
       }
       dictionaryProvider.refresh();
     }
@@ -417,9 +429,10 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(copyTableToCSV);
   context.subscriptions.push(copyVarsToCSV);
   context.subscriptions.push(viewDocOnTable);
+  context.subscriptions.push(commandExportToExcel);
   context.subscriptions.push(completionItemProvider(context));
 
-  //vscode.window.registerTreeDataProvider("dic-list", dictionaryProvider);
+  vscode.window.registerTreeDataProvider("dic-list", dictionaryProvider);
   vscode.window.registerTreeDataProvider("dic-tabs", dicTabProvider);
   vscode.window.registerTreeDataProvider("dic-vars", dicTabVarProvider);
   vscode.window.registerTreeDataProvider("dic-docs", docProvider);
