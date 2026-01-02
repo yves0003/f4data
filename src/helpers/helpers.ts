@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import { parse } from "csv-parse";
 import { TreeDataProvider, TreeView, window, workspace } from "vscode";
 import path from "path";
 import * as readline from "readline/promises";
@@ -188,87 +187,6 @@ export async function directoryExists(dirPath: string): Promise<boolean> {
   }
 }
 
-export async function readAndExtractData<T extends Object>(
-  path: string,
-  filename: string,
-  columnsToExtract: (keyof T)[]
-): Promise<T[]> {
-  const filePath = `${addSlashEnd(path)}${filename}`;
-  // Check if file exists
-  try {
-    await fs.promises.access(filePath, fs.constants.F_OK);
-  } catch (error) {
-    return []; // Return empty array if the file doesn't exist
-  }
-  return new Promise(async (resolve, reject) => {
-    const data: T[] = [];
-    const separator = await detectSeparator(filePath);
-    if (separator) {
-      const parser = parse({
-        delimiter: separator,
-        columns: true,
-        encoding: "utf-8",
-      });
-      parser.on("error", (err) => {
-        window.showErrorMessage(err.message);
-      });
-      fs.createReadStream(filePath)
-        .pipe(parser)
-        .on("data", (row) => {
-          cleanKeys(row);
-          const extractedRow = {} as T;
-          for (const column of columnsToExtract) {
-            if (row[column]) {
-              extractedRow[column] = row[column];
-            }
-          }
-          if (Object.keys(extractedRow).length > 0) {
-            data.push(extractedRow);
-          }
-        })
-        .on("end", () => {
-          if (data.length === 0) {
-            window.showErrorMessage(`${filename}: is empty`);
-          }
-          resolve(data);
-        })
-        .on("error", (error) => {
-          window.showErrorMessage(`test: ${error.message}`);
-          resolve([]);
-        });
-    } else {
-      window.showErrorMessage(`${filename}: cannot be parse`);
-    }
-  });
-}
-
-export async function readCsvFile(filePath: string): Promise<any[]> {
-  return new Promise(async (resolve, reject) => {
-    const data: any[] = [];
-    const separator = await detectSeparator(filePath);
-    if (separator) {
-      fs.createReadStream(filePath)
-        .pipe(parse({ delimiter: separator, columns: true, encoding: "utf-8" }))
-        .on("data", (row) => {
-          cleanKeys(row);
-          data.push(row);
-        })
-        .on("end", () => {
-          if (data.length === 0) {
-            window.showErrorMessage(`Cannot open the file`);
-          }
-          resolve(data);
-        })
-        .on("error", (error) => {
-          window.showErrorMessage(`${error.message}`);
-          reject(error);
-        });
-    } else {
-      window.showErrorMessage(`Csv File cannot be parse`);
-    }
-  });
-}
-
 export function checkFileExists(filePath: string): Promise<boolean> {
   return new Promise((resolve) => {
     fs.access(filePath, fs.constants.F_OK, (err) => {
@@ -332,41 +250,6 @@ export async function findAllLastUpdateFiles(
     window.showWarningMessage(`Error reading all directory : ${err}`);
   }
   return results;
-}
-
-export function detectSeparator(filePath: string): Promise<string | null> {
-  return new Promise((resolve, reject) => {
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.on("error", (err) => {
-      window.showErrorMessage(err.message);
-      resolve("");
-    });
-    const rl = readline.createInterface({
-      input: fileStream,
-      crlfDelay: Infinity,
-    });
-
-    const lines: string[] = [];
-    rl.on("line", (line) => {
-      lines.push(line);
-      if (lines.length === 2) {
-        rl.close(); // Stop reading after the first two lines
-      }
-    });
-
-    rl.on("close", () => {
-      if (lines.length < 2) {
-        reject(new Error("File does not have two lines to analyze"));
-      } else {
-        const separator = findSeparator(lines[0], lines[1]);
-        resolve(separator);
-      }
-    });
-
-    rl.on("error", (error) => {
-      reject(error);
-    });
-  });
 }
 
 export class AddInfoTitleView<T> {
@@ -510,21 +393,6 @@ export function getHtmlForWeb(
   </body>
   </html>
   `;
-}
-
-export function addSlashEnd(link: string) {
-  let lastChar: string = "/";
-  const hasBackSlash = /\\/.test(link);
-  const hasSlash = /\//.test(link);
-  if (hasBackSlash) {
-    lastChar = "\\";
-  }
-  if (hasSlash) {
-    lastChar = "/";
-  }
-  // if site has an end slash (like: www.example.com/),
-  // then remove it and return the site without the end slash
-  return link.replace(/\/$/, "").replace(/\\$/, "") + lastChar; // Match a forward slash / at the end of the string ($)
 }
 
 export function stringEscapeBack(s: string) {

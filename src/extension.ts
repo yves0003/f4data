@@ -10,7 +10,7 @@ import {
 import { find, indexOf as lodashIndexOf } from "lodash";
 import { Dictionary, DictionaryProvider } from "./providers/dictionaryProvider";
 import path from "path";
-import { EnumNode, EnumNodeElt, RefNode } from "./helpers/ast_to_data";
+import { EnumNodeElt, RefNode } from "./helpers/ast_to_data";
 import { DicTabProvider } from "./providers/dicTabProvider";
 import { DicTabVarProvider } from "./providers/dicTabVarProvider";
 import { OutputTable } from "./helpers/ast_to_data";
@@ -61,7 +61,7 @@ const upsert = function (
 };
 
 export async function activate(context: vscode.ExtensionContext) {
-  //const config = vscode.workspace.getConfiguration("f4data");
+  const config = vscode.workspace.getConfiguration("f4data");
   //await config.update("snippetPath", null);
   //console.log(config, "config.f4data");
   const alldict = context.globalState.get("f4data.list") as
@@ -459,6 +459,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export async function deactivate(): Promise<void> {
-  const config = vscode.workspace.getConfiguration("f4data");
-  await config.update("list", [], vscode.ConfigurationTarget.Global);
+  //const config = vscode.workspace.getConfiguration("f4data");
+  //await config.update("list", [], vscode.ConfigurationTarget.Global);
 }

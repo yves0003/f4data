@@ -6,7 +6,8 @@ import {
   TreeItem,
   TreeItemCollapsibleState,
 } from "vscode";
-import { addSlashEnd, checkFileExistsSync } from "../helpers/helpers";
+import { checkFileExistsSync } from "../helpers/helpers";
+import path from "path";
 
 class Table extends TreeItem {
   valName: string;
@@ -25,10 +26,11 @@ class Table extends TreeItem {
     if (isChild) {
       this.iconPath = undefined;
     } else {
-      this.docLink = `${addSlashEnd(
-        `${addSlashEnd(linkDir)}Tables`
-      )}${this.valName.toUpperCase()}.md`;
-
+      this.docLink = path.join(
+        linkDir,
+        "Tables",
+        `${this.valName.toUpperCase()}.md`
+      );
       const fileExist = checkFileExistsSync(this.docLink);
       if (fileExist) {
         this.contextValue = "parent_with_docs";

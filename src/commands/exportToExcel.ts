@@ -2,16 +2,14 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import { getAllGlobalState } from "../helpers/getAllGlobalKeys";
 import { parseFileInWorker } from "../workers/parseFileInWorker";
-import ExcelJS from "exceljs";
-import { addSlashEnd } from "../helpers/helpers";
 import { EnumNodeElt, OutputTable, RefNode } from "../helpers/ast_to_data";
-
+import path from "path";
+import * as XLSX from "xlsx-js-style";
 const TABLE_HEADER_COLORS = {
-  default: "FF4F81BD", // blue
-  Tables: "FFF79646", // orange
-  Mapp: "FF9BBB59", // green
+  default: "4F81BD", // blue
+  Tables: "F79646", // orange
+  Mapp: "9BBB59", // green
 };
-
 export async function exportToExcel(context: vscode.ExtensionContext) {
   let selectedDir: string;
   try {
@@ -84,7 +82,6 @@ export async function exportToExcel(context: vscode.ExtensionContext) {
     }
   }
 }
-
 async function filterExistingFiles(dictionaries: listDico) {
   const checks = await Promise.all(
     dictionaries.map(async (dic) => {
@@ -102,23 +99,17 @@ async function filterExistingFiles(dictionaries: listDico) {
 
   return checks.filter(Boolean) as listDico;
 }
-function addBackToSummary(sheet: ExcelJS.Worksheet) {
-  const cell = sheet.getCell("A1");
-
-  cell.value = {
-    text: "⬅ Back to Summary",
-    hyperlink: "#'Summary'!A1",
-  };
-
-  cell.font = {
-    color: { argb: "FF0000FF" },
-    bold: true,
-    underline: true,
-  };
-
-  sheet.mergeCells("A1:C1");
-
-  sheet.addRow([]);
+function addBackToSummary(rows: any[][]) {
+  rows.unshift([]); // spacer row
+  rows.unshift([
+    {
+      v: "⬅ Back to Summary",
+      l: { Target: "#'Summary'!A1" },
+    },
+  ]);
+}
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 function getHeaderColor(type: "Tables" | "Mapp" | "Default"): string {
   if (type === "Tables") {
@@ -128,50 +119,6 @@ function getHeaderColor(type: "Tables" | "Mapp" | "Default"): string {
     return TABLE_HEADER_COLORS.Mapp;
   }
   return TABLE_HEADER_COLORS.default;
-}
-function styleHeaderRowByTable(
-  sheet: ExcelJS.Worksheet,
-  headerRowIndex: number,
-  type: "Tables" | "Mapp" | "Default"
-) {
-  const color = getHeaderColor(type);
-  const row = sheet.getRow(headerRowIndex);
-
-  row.eachCell((cell) => {
-    cell.font = {
-      bold: true,
-      color: { argb: "FFFFFFFF" },
-    };
-
-    cell.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: color },
-    };
-
-    cell.alignment = { horizontal: "left" };
-  });
-}
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
-function autoSizeColumn(
-  sheet: ExcelJS.Worksheet,
-  columnIndex: number,
-  min = 10,
-  max = 40
-) {
-  let maxLength = 0;
-
-  sheet.getColumn(columnIndex).eachCell({ includeEmpty: true }, (cell) => {
-    const value = cell.value ? cell.value.toString() : "";
-    maxLength = Math.max(maxLength, value.length);
-  });
-
-  sheet.getColumn(columnIndex).width = clamp(maxLength + 2, min, max);
 }
 async function runWithConcurrency<T>(
   items: T[],
@@ -203,22 +150,24 @@ async function exportOneFile(
     }
     progress.report({ message: `Parsing ${dirInfo.name}` });
     const listTabsInfo = await parseFileInWorker(dirInfo.link!, dirInfo.name!);
-    const workbook = new ExcelJS.Workbook();
+    const workbook = XLSX.utils.book_new();
+
     createSummarySheet(workbook, listTabsInfo);
     createTablesSheet(workbook, listTabsInfo);
     createMappingsSheet(workbook, listTabsInfo);
-    const outputPath = addSlashEnd(selectedDir) + `${listTabsInfo.name}.xlsx`;
 
-    await workbook.xlsx.writeFile(outputPath);
+    const outputPath = path.join(selectedDir, `${listTabsInfo.name}.xlsx`);
+    XLSX.writeFile(workbook, outputPath);
+
     progress.report({ message: `Saved ${listTabsInfo.name}` });
     return { success: true };
   } catch (error) {
-    console.error(`Export failed for ${dirInfo.name}`, error);
+    vscode.window.showErrorMessage(`Export failed for ${dirInfo.name}`);
     return { success: false, name: dirInfo.name, error };
   }
 }
 function createSummarySheet(
-  workbook: ExcelJS.Workbook,
+  workbook: XLSX.WorkBook,
   listTabsInfo: {
     name: string;
     tables: OutputTable[];
@@ -226,41 +175,40 @@ function createSummarySheet(
     links: RefNode[];
   }
 ) {
+  const color = getHeaderColor("Default");
   //tab-contents
-  const summarySheet = workbook.addWorksheet("Summary");
-  summarySheet.addRow(["Name", "Type", "Description"]);
-  summarySheet.views = [{ state: "frozen", ySplit: 1 }];
-  autoSizeColumn(summarySheet, 1, 10, 50);
-  autoSizeColumn(summarySheet, 2, 10, 50);
-  autoSizeColumn(summarySheet, 3, 10, 50);
-  styleHeaderRowByTable(summarySheet, 1, "Default");
+  const rows: any[][] = [
+    [
+      { v: "Name", t: "s", s: { fill: { fgColor: { rgb: color } } } },
+      { v: "Type", t: "s", s: { fill: { fgColor: { rgb: color } } } },
+      { v: "Description", t: "s", s: { fill: { fgColor: { rgb: color } } } },
+    ],
+  ];
   for (const table of listTabsInfo.tables) {
-    const summaryRow = summarySheet.addRow([
-      table.name,
-      "Tables",
+    rows.push([
+      {
+        v: table.name,
+        l: { Target: `#'${table.name}'!A1` },
+      },
+      "Table",
       table.description,
     ]);
-    summaryRow.getCell(1).value = {
-      text: table.name,
-      hyperlink: `#'${table.name}'!A1`,
-    };
-    summaryRow.getCell(1).font = { underline: true };
   }
   for (const mapping of listTabsInfo.mappings) {
-    const summaryRow = summarySheet.addRow([
-      mapping.name,
+    rows.push([
+      {
+        v: mapping.name,
+        l: { Target: `#'${mapping.name}'!A1` },
+      },
       "Mapping",
       mapping.table,
     ]);
-    summaryRow.getCell(1).value = {
-      text: mapping.name,
-      hyperlink: `#'${mapping.name}'!A1`,
-    };
-    summaryRow.getCell(1).font = { underline: true };
   }
+  const summarySheet = XLSX.utils.aoa_to_sheet(rows);
+  XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
 }
 function createTablesSheet(
-  workbook: ExcelJS.Workbook,
+  workbook: XLSX.WorkBook,
   listTabsInfo: {
     name: string;
     tables: OutputTable[];
@@ -268,42 +216,63 @@ function createTablesSheet(
     links: RefNode[];
   }
 ) {
+  const color = getHeaderColor("Tables");
   for (const table of listTabsInfo.tables) {
-    const sheet = workbook.addWorksheet(table.name);
-    addBackToSummary(sheet);
-    sheet.addRow([
-      "Column Name",
-      "Type",
-      "Primary Key",
-      "Description",
-      "Has Mapping",
-    ]);
-    styleHeaderRowByTable(sheet, 3, "Tables");
+    const rows: any[][] = [
+      [
+        {
+          v: "Column Name",
+          t: "s",
+          s: { fill: { fgColor: { rgb: color } } },
+        },
+        { v: "Type", t: "s", s: { fill: { fgColor: { rgb: color } } } },
+        {
+          v: "Primary Key",
+          t: "s",
+          s: { fill: { fgColor: { rgb: color } } },
+        },
+        {
+          v: "Description",
+          t: "s",
+          s: { fill: { fgColor: { rgb: color } } },
+        },
+        {
+          v: "Has Mapping",
+          t: "s",
+          s: { fill: { fgColor: { rgb: color } } },
+        },
+      ],
+    ];
     table.variables.forEach((v) => {
-      const row = sheet.addRow([
-        v.name,
-        v.typeVar,
-        v.cle ? "X" : "",
-        v.desc,
-        v.hasMapping ? "X" : "",
+      rows.push([
+        v.hasMapping
+          ? {
+              v: v.name,
+              l: { Target: `#'${v.name}'!A1` },
+              t: "s",
+              s: { font: { underline: true } },
+            }
+          : {
+              v: v.name,
+              t: "s",
+              s: { font: { underline: false } },
+            },
+        { v: v.typeVar || "" },
+        v.cle ? { v: "X" } : { v: "" },
+        { v: v.desc || "" },
+        v.hasMapping ? { v: "X" } : { v: "" },
       ]);
-      if (v.hasMapping) {
-        const cell = row.getCell(1);
-        cell.value = {
-          text: v.name,
-          hyperlink: `#'${v.name}'!A1`,
-        };
-        cell.font = {
-          underline: true,
-        };
-      }
     });
-    sheet.views = [{ state: "frozen", ySplit: 3 }];
-    autoSizeColumn(sheet, 1, 10, 50);
+
+    addBackToSummary(rows);
+
+    const tableSheet = XLSX.utils.aoa_to_sheet(rows);
+
+    XLSX.utils.book_append_sheet(workbook, tableSheet, table.name);
   }
 }
 function createMappingsSheet(
-  workbook: ExcelJS.Workbook,
+  workbook: XLSX.WorkBook,
   listTabsInfo: {
     name: string;
     tables: OutputTable[];
@@ -311,17 +280,23 @@ function createMappingsSheet(
     links: RefNode[];
   }
 ) {
+  const color = getHeaderColor("Mapp");
   for (const mapping of listTabsInfo.mappings) {
-    const mapSheet = workbook.addWorksheet(mapping.name);
-    addBackToSummary(mapSheet);
-    mapSheet.addRow(["Modalities", "Descriptions", "Notes"]);
-    styleHeaderRowByTable(mapSheet, 3, "Mapp");
-    mapping.members.forEach((mm) => {
-      mapSheet.addRow([mm.key, mm.description, mm.note]);
-    });
-    mapSheet.views = [{ state: "frozen", ySplit: 3 }];
-    autoSizeColumn(mapSheet, 1, 10, 50);
-    autoSizeColumn(mapSheet, 2, 10, 50);
-    autoSizeColumn(mapSheet, 3, 10, 50);
+    const rows: any[][] = [
+      [
+        { v: "Modalities", t: "s", s: { fill: { fgColor: { rgb: color } } } },
+        { v: "Descriptions", t: "s", s: { fill: { fgColor: { rgb: color } } } },
+        { v: "Notes", t: "s", s: { fill: { fgColor: { rgb: color } } } },
+      ],
+    ];
+
+    for (const m of mapping.members) {
+      rows.push([m.key, m.description, m.note]);
+    }
+
+    addBackToSummary(rows);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(workbook, ws, mapping.name);
   }
 }

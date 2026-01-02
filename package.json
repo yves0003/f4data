@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/yves0003/f4data.git"
   },
-  "version": "0.5.0",
+  "version": "0.5.1",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -30,7 +30,7 @@
     {
       "href": "https://yveszendja.com",
       "description": "badge version",
-      "url": "https://img.shields.io/badge/f4data-0.5.0-blue"
+      "url": "https://img.shields.io/badge/f4data-0.5.1-blue"
     }
   ],
   "activationEvents": [
@@ -45,22 +45,20 @@
     ],
     "configuration": {
       "title": "f4data",
+      "type": "object",
       "properties": {
         "f4data.excel.tableHeaderExcelColor.default": {
           "type": "string",
-          "format": "color",
           "default": "#4F81BD",
           "description": "Header color for default tables"
         },
         "f4data.excel.tableHeaderExcelColor.tables": {
           "type": "string",
-          "format": "color",
           "default": "#F79646",
           "description": "Header color for tables sheets"
         },
         "f4data.excel.tableHeaderExcelColor.mapping": {
           "type": "string",
-          "format": "color",
           "default": "#9BBB59",
           "description": "Header color for mapping sheets"
         }
@@ -294,6 +292,10 @@
     "build:websearch": "cd web_search && npm run build",
     "build:vsix": "vsce package -o ./packages"
   },
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
   "devDependencies": {
     "@types/lodash": "^4.17.16",
     "@types/mocha": "^10.0.10",
@@ -307,11 +309,10 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "csv-parse": "^5.6.0",
-    "exceljs": "^4.4.0",
     "lodash": "^4.17.21",
     "markdown-it-collapsible": "^2.0.2",
     "markdown-it-highlightjs": "^4.2.0",
-    "worker-threads": "^1.0.0"
+    "worker-threads": "^1.0.0",
+    "xlsx-js-style": "^1.2.0"
   }
 }
