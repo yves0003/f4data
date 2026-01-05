@@ -47,6 +47,10 @@ export async function extractTextFromFile(
   }
 }
 
+export function safeSheetName(name: string): string {
+  return name.replace(/[:\\/?*\[\]]/g, "_").slice(0, 31);
+}
+
 /**
  * Reads and returns the contents of a file as text
  * @param filePath Full path to the file

@@ -5,6 +5,7 @@ import { parseFileInWorker } from "../workers/parseFileInWorker";
 import { EnumNodeElt, OutputTable, RefNode } from "../helpers/ast_to_data";
 import path from "path";
 import * as XLSX from "xlsx-js-style";
+import { safeSheetName } from "../helpers/helpers";
 const TABLE_HEADER_COLORS = {
   default: "4F81BD", // blue
   Tables: "F79646", // orange
@@ -188,7 +189,7 @@ function createSummarySheet(
     rows.push([
       {
         v: table.name,
-        l: { Target: `#'${table.name}'!A1` },
+        l: { Target: `#'${safeSheetName(table.name)}'!A1` },
       },
       "Table",
       table.description,
@@ -248,7 +249,7 @@ function createTablesSheet(
         v.hasMapping
           ? {
               v: v.name,
-              l: { Target: `#'${v.name}'!A1` },
+              l: { Target: `#'${safeSheetName(v.name)}'!A1` },
               t: "s",
               s: { font: { underline: true } },
             }
@@ -268,7 +269,11 @@ function createTablesSheet(
 
     const tableSheet = XLSX.utils.aoa_to_sheet(rows);
 
-    XLSX.utils.book_append_sheet(workbook, tableSheet, table.name);
+    XLSX.utils.book_append_sheet(
+      workbook,
+      tableSheet,
+      safeSheetName(table.name)
+    );
   }
 }
 function createMappingsSheet(
@@ -297,6 +302,6 @@ function createMappingsSheet(
     addBackToSummary(rows);
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    XLSX.utils.book_append_sheet(workbook, ws, mapping.name);
+    XLSX.utils.book_append_sheet(workbook, ws, safeSheetName(mapping.name));
   }
 }
