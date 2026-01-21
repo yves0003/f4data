@@ -11,7 +11,7 @@ This extension allow to view and understand your data in VS Code. the support in
 - View definition of a variables
 - Defined and update the working directory of each dictionary
 
-![detail app](https://res.cloudinary.com/lokalistic/image/upload/v1753987940/vscode_ext/f4ext-vscode.gif)
+![detail app](https://res.cloudinary.com/lokalistic/image/upload/v1769034556/vscode_ext/f4data-example_t00er3.gif)
 
 The extension only allow two types of file :
 
