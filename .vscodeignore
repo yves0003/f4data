@@ -21,3 +21,4 @@ web_search/.eslintrc*
 web_search/*.txt
 web_search/node_modules
 web/node_modules
+mcp
