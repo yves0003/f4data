@@ -1,5 +1,7 @@
 // Use this language to define your database structure
 // Docs: https://dbml.dbdiagram.io/docs
+@name: img
+@desc: fichier des images de test
 
 # Table des utilisateurs
 table users as us {
@@ -28,7 +30,7 @@ table test.ateliers as test {
 }
 
 ref : ateliers.list_users > users.id
-ref : ateliers.id <> users.id
+ref : ateliers.id < users.id
 ref : yves.id <> users.'test id'
 
 enum ateliers.List_Users {

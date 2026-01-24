@@ -7,10 +7,6 @@ type DefinitionNode = {
   value: string;
 };
 
-type PropsFileNode = {
-  type: "PropsFile";
-  value: string;
-};
 type TableNode = {
   type: "Table";
   name: string;
@@ -50,7 +46,6 @@ type MemberNode = {
 
 type ASTNodeType =
   | DefinitionNode
-  | PropsFileNode
   | EnumNode
   | TableNode
   | VariableNode
@@ -89,10 +84,6 @@ function isDefinitionNode(node: ASTNodeType): node is DefinitionNode {
   return node.type === "Definition";
 }
 
-function isPropsFileNode(node: ASTNodeType): node is PropsFileNode {
-  return node.type === "PropsFile";
-}
-
 function isTableNode(node: ASTNodeType): node is TableNode {
   return node.type === "Table";
 }
@@ -114,18 +105,15 @@ export const ast_to_data = (
   name = ""
 ): {
   name: string;
-  desc: string;
   tables: OutputTable[];
   mappings: EnumNodeElt[];
   links: RefNode[];
-  props: PropsFileNode[];
 } => {
   let lastDefinition = "";
   let tableCount = 0;
   const result: OutputTable[] = [];
   const allMapping: EnumNodeElt[] = [];
   const allRef: RefNode[] = [];
-  const allProps: PropsFileNode[] = [];
 
   input.forEach((item) => {
     if (item && isEnumNode(item)) {
@@ -138,11 +126,6 @@ export const ast_to_data = (
   input.forEach((item) => {
     if (item && isRefNode(item)) {
       allRef.push(item);
-    }
-  });
-  input.forEach((item) => {
-    if (item && isPropsFileNode(item)) {
-      allProps.push(item);
     }
   });
 
@@ -202,20 +185,7 @@ export const ast_to_data = (
       tableCount++;
     }
   });
-  const descFile =
-    allProps
-      .find((props) => props.value.startsWith("desc"))
-      ?.value.slice(5)
-      .trim() || "";
-
-  return {
-    name,
-    desc: descFile,
-    tables: result,
-    mappings: allMapping,
-    links: allRef,
-    props: allProps,
-  };
+  return { name, tables: result, mappings: allMapping, links: allRef };
 };
 
 export function addUniqueToArr<T>(arr: T[], obj: T, keys: (keyof T)[]) {

@@ -24,7 +24,6 @@ export const Spec: [
     | "LBRACE"
     | "TRIPLE_QUOTE_STRING"
     | "NEWLINE"
-    | "PROPS"
     | null
   )
 ][] = [
@@ -44,7 +43,6 @@ export const Spec: [
   [/^"(?:\\.|[^"])*"/, "STRING"],
   // Keywords => gpt=[/^#.*/, "DEFINITION"],
   //[/^#.*\b/, "DEFINITION"],
-  [/^@(.*)/, "PROPS"],
   [/^#(.*)/, "DEFINITION"],
   [/^enum\b/i, "ENUM"],
   [/^table\b/i, "TABLE"],

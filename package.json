@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/yves0003/f4data.git"
   },
-  "version": "0.5.2",
+  "version": "0.6.0",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -30,7 +30,7 @@
     {
       "href": "https://yveszendja.com",
       "description": "badge version",
-      "url": "https://img.shields.io/badge/f4data-0.5.2-blue"
+      "url": "https://img.shields.io/badge/f4data-0.6.0-blue"
     }
   ],
   "activationEvents": [
@@ -98,6 +98,18 @@
       {
         "command": "f4data.deleteAdict",
         "title": "Delete"
+      },
+      {
+        "command": "f4data.deactivateCopy",
+        "title": "Disable Export"
+      },
+      {
+        "command": "f4data.activateCopy",
+        "title": "Enable Export"
+      },
+      {
+        "command": "f4data.addWorkDir",
+        "title": "Add a working directory"
       },
       {
         "command": "f4data.updateWorkDir",
@@ -235,15 +247,30 @@
         {
           "when": "view == dic-list",
           "command": "f4data.deleteAdict",
+          "group": "3_delete"
+        },
+        {
+          "when": "view == dic-list && viewItem =~ /^dictionary:active/",
+          "command": "f4data.deactivateCopy",
           "group": "2_delete"
         },
         {
-          "when": "view == dic-list",
+          "when": "view == dic-list && viewItem =~ /^dictionary:inactive/",
+          "command": "f4data.activateCopy",
+          "group": "2_delete"
+        },
+        {
+          "when": "view == dic-list  && viewItem =~ /noWorkDir/",
+          "command": "f4data.addWorkDir",
+          "group": "1_delete"
+        },
+        {
+          "when": "view == dic-list && viewItem =~ /hasWorkDir/",
           "command": "f4data.updateWorkDir",
           "group": "1_delete"
         },
         {
-          "when": "view == dic-list",
+          "when": "view == dic-list && viewItem =~ /hasWorkDir/",
           "command": "f4data.openWorkDir",
           "group": "1_delete"
         },

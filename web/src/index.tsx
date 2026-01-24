@@ -6,15 +6,10 @@ import { WindowContextProvider } from "./context/WindowsContext";
 import Canvas from "./components/Canvas2";
 import { ast_to_data2 } from "./helpers/ast_to_data2";
 import { transformRefs } from "./helpers/transformRefs";
-import { exemple } from "./constants/exemple";
-import { dummy } from "./constants/dummy";
+import { dummy, dummyLarge } from "./constants/dummy";
 if (import.meta.env.DEV) {
   await import("@vscode-elements/webview-playground");
 }
-
-const allData: ReturnType<typeof ast_to_data2> = dummy[0] as ReturnType<
-  typeof ast_to_data2
->;
 
 const App = () => {
   const [arrange, setArrange] = useState(false);
@@ -33,6 +28,8 @@ const App = () => {
       }>
     ) => {
       if (import.meta.env.DEV) {
+        const allData: ReturnType<typeof ast_to_data2> =
+          dummyLarge[0] as ReturnType<typeof ast_to_data2>;
         setPayload(allData);
         const links = transformRefs(allData.links);
         setListLinks(links);

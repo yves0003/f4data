@@ -41,8 +41,6 @@ export class Parser {
 
   private parseStatement() {
     switch (this._lookahead?.type) {
-      case "PROPS":
-        return this.parseProps();
       case "DEFINITION":
         return this.parseDefinition();
       case "TABLE":
@@ -301,11 +299,6 @@ export class Parser {
   private parseDefinition() {
     const value = this._eat("DEFINITION")?.value;
     return { type: "Definition", value: value?.slice(1).trim() };
-  }
-
-  private parseProps() {
-    const value = this._eat("PROPS")?.value;
-    return { type: "PropsFile", value: value?.slice(1).trim() };
   }
 
   private parseString() {

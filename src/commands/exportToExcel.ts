@@ -75,8 +75,12 @@ export async function exportToExcel(context: vscode.ExtensionContext) {
     );
   } else {
     const duration = Date.now() - start;
-    if (duration < 1000) {
-      await delay(1000 - duration);
+    if (duration < 2000) {
+      await delay(2000 - duration);
+      vscode.window.showInformationMessage(
+        "All Excel files exported successfully ✔"
+      );
+    } else {
       vscode.window.showInformationMessage(
         "All Excel files exported successfully ✔"
       );
@@ -86,7 +90,7 @@ export async function exportToExcel(context: vscode.ExtensionContext) {
 async function filterExistingFiles(dictionaries: listDico) {
   const checks = await Promise.all(
     dictionaries.map(async (dic) => {
-      if (!dic.link) {
+      if (!dic.link || dic.disable) {
         return null;
       }
       try {

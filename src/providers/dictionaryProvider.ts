@@ -4,7 +4,6 @@ import {
   TreeDataProvider,
   TreeItem,
   window,
-  workspace,
   Event,
   env,
   Uri,
@@ -20,11 +19,27 @@ import {
 export class Dictionary extends TreeItem {
   constructor(
     public readonly label: string,
+    public readonly disable?: boolean,
+    public readonly workDir?: string,
     public readonly parent?: Dictionary
   ) {
     super(label);
+    this.resourceUri = Uri.parse(
+      `f4data-dictionary:/${encodeURIComponent(label)}`
+    );
+    this.tooltip = label;
+    this.iconPath = disable
+      ? new ThemeIcon(
+          "database",
+          new vscode.ThemeColor("activityBar.inactiveForeground")
+        )
+      : new ThemeIcon("database");
+    this.contextValue = [
+      "dictionary",
+      disable ? "inactive" : "active",
+      workDir && workDir !== "" ? "hasWorkDir" : "noWorkDir",
+    ].join(":");
   }
-  iconPath = new ThemeIcon("database");
   command = {
     title: "selected dictionary clicked",
     command: "f4data.clickOnDicItem",
@@ -41,7 +56,9 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
     this.context = context;
     const dictionaries = this.getDictionaryInfos();
     if (dictionaries && dictionaries.length > 0) {
-      this.data = dictionaries.map((dico) => new Dictionary(dico.name || ""));
+      this.data = dictionaries.map(
+        (dico) => new Dictionary(dico.name || "", dico.disable, dico.work_dir)
+      );
     } else {
       this.data = [];
     }
@@ -54,8 +71,6 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
     this._onDidChangeTreeData.event;
 
   private getDictionaryInfos() {
-    //const config = workspace.getConfiguration("f4data");
-    //const dictionaries: listDico | undefined = config.get("list");
     const dictionaries = getAllGlobalState(this.context)[
       "f4data.list"
     ] as listDico;
@@ -71,7 +86,7 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
       const dictionaries = this.getDictionaryInfos();
       if (dictionaries && dictionaries.length > 0) {
         const dictionariesName = dictionaries.map(
-          (dico) => new Dictionary(dico.name || "")
+          (dico) => new Dictionary(dico.name || "", dico.disable, dico.work_dir)
         );
         return Promise.resolve(dictionariesName);
       } else {
@@ -91,7 +106,7 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
       const dictionaries = this.getDictionaryInfos();
       if (dictionaries && dictionaries.length > 0) {
         let newData = dictionaries.map(
-          (dico) => new Dictionary(dico.name || "")
+          (dico) => new Dictionary(dico.name || "", dico.disable, dico.work_dir)
         );
         if (newData.length !== this.data.length) {
           this.data = newData;
@@ -109,7 +124,13 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
   revealItem(name: string) {
     const item = this.data.find((i) => i.label === name);
     if (item && this.view) {
-      const dic = new Dictionary(item.label);
+      const dictionaries = this.getDictionaryInfos();
+      const selectedDic = dictionaries.find((dic) => dic.name === item.label);
+      const dic = new Dictionary(
+        item.label,
+        selectedDic?.disable,
+        selectedDic?.work_dir
+      );
       this.view.reveal(dic, { select: true, focus: true });
     }
   }
@@ -266,7 +287,6 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
             const dirExist = await directoryExists(text);
             if (!dirExist) {
               input.validationMessage = `The directory does not exist`;
-              //window.showErrorMessage(`The directory does not exist`);
             } else {
               input.validationMessage = "";
             }

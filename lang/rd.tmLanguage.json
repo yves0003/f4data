@@ -29,6 +29,12 @@
         "1": { "name": "variable.other.rd" },
         "2": { "name": "storage.type.rd" }
       }
+    },
+    {
+      "match": "^@([a-zA-Z0-9_.\\[\\]]+)",
+      "captures": {
+        "1": { "name": "keyword.control.rd" }
+      }
     }
   ]
 }

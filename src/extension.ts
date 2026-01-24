@@ -28,6 +28,7 @@ import {
   updateGlobalState,
 } from "./helpers/getAllGlobalKeys";
 import { exportToExcel } from "./commands/exportToExcel";
+import { DictionaryPrivDec } from "./providers/dictionaryPrivDec";
 
 interface State {
   title: string;
@@ -61,19 +62,6 @@ const upsert = function (
 };
 
 export async function activate(context: vscode.ExtensionContext) {
-  const config = vscode.workspace.getConfiguration("f4data");
-  //await config.update("snippetPath", null);
-  //console.log(config, "config.f4data");
-  const alldict = context.globalState.get("f4data.list") as
-    | listDico
-    | undefined;
-  const snipDir = context.globalState.get("f4data.snippetPath") as
-    | string
-    | undefined;
-  //updateContextBasedOnConfig(config);
-  //console.log(config.get("list"), "extension config");
-  //console.log(getAllGlobalState(context), "extension context");
-
   let selectedDic: OutputTable[] = [];
   let selectedTab: string = "";
   let allMappDic: EnumNodeElt[];
@@ -85,6 +73,7 @@ export async function activate(context: vscode.ExtensionContext) {
   } = { name: "", tables: [], mappings: [], links: [] };
   let listVarTabsInfo: OutputTable | undefined;
   const dictionaryProvider = new DictionaryProvider(context);
+  const dictionaryPrivDec = new DictionaryPrivDec(context);
   const dicListView = vscode.window.createTreeView("dic-list", {
     treeDataProvider: dictionaryProvider,
   });
@@ -96,6 +85,8 @@ export async function activate(context: vscode.ExtensionContext) {
   const title_tab = new AddInfoTitleView("dic-tabs", dicTabProvider);
   const title_var = new AddInfoTitleView("dic-vars", dicTabVarProvider);
 
+  const dictDecoration =
+    vscode.window.registerFileDecorationProvider(dictionaryPrivDec);
   const displayMapOnView = vscode.window.registerWebviewViewProvider(
     mapProvider.viewType,
     mapProvider
@@ -149,7 +140,11 @@ export async function activate(context: vscode.ExtensionContext) {
       const savedDictionaries = (getAllGlobalState(context)["f4data.list"] ||
         []) as listDico;
       for (const dict of list_dics) {
-        const dictToAdd = { name: dict.filename, link: dict.filePath };
+        const dictToAdd = {
+          name: dict.filename,
+          link: dict.filePath,
+          disable: false,
+        };
         // await config.update(
         //   "list",
         //   upsert(savedDictionaries, "name", dictToAdd),
@@ -271,6 +266,27 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     }
   );
+  const toggleCopyActivation =
+    (status: boolean) => async (item: Dictionary) => {
+      if (!item?.label) {
+        return;
+      }
+      const dictionaries = getAllGlobalState(context)[
+        "f4data.list"
+      ] as listDico;
+
+      const updated = dictionaries.map((dict) =>
+        dict.name === item.label ? { ...dict, disable: status } : dict
+      );
+
+      const globalStateUpdate = updateGlobalState(context);
+      await globalStateUpdate("f4data.list", updated);
+      const uri = vscode.Uri.parse(
+        `f4data-dictionary:/${encodeURIComponent(item.label)}`
+      );
+      dictionaryProvider.refresh();
+      dictionaryPrivDec.refresh(uri);
+    };
   const deleteDictionary = vscode.commands.registerCommand(
     "f4data.deleteAdict",
     async (item) => {
@@ -291,16 +307,24 @@ export async function activate(context: vscode.ExtensionContext) {
       ) {
         SearchPanelDiag.currentPanel?.dispose();
       }
-
+      await toggleCopyActivation(false)(item);
       //mapProvider.updateContent([], "");
     }
   );
   const openWorkDir = vscode.commands.registerCommand(
     "f4data.openWorkDir",
-    async (item) => {
+    async (item: Dictionary) => {
       await dictionaryProvider.on_open_work_dir(item);
       dictionaryProvider.refresh();
     }
+  );
+  const deactivateCopy = vscode.commands.registerCommand(
+    "f4data.deactivateCopy",
+    toggleCopyActivation(true)
+  );
+  const activateCopy = vscode.commands.registerCommand(
+    "f4data.activateCopy",
+    toggleCopyActivation(false)
   );
   const displayMapOnClick = vscode.commands.registerCommand(
     "f4data.displayMap",
@@ -323,11 +347,20 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     }
   );
+  const addWorkDir = vscode.commands.registerCommand(
+    "f4data.addWorkDir",
+    async (item) => {
+      await dictionaryProvider.on_update_work_dir(item);
+      dictionaryProvider.refresh();
+      vscode.window.showInformationMessage(`Directory added`);
+    }
+  );
   const updateWorkDir = vscode.commands.registerCommand(
     "f4data.updateWorkDir",
     async (item) => {
       await dictionaryProvider.on_update_work_dir(item);
       dictionaryProvider.refresh();
+      vscode.window.showInformationMessage(`Directory updated`);
     }
   );
   const clickOnVar = vscode.commands.registerCommand(
@@ -418,6 +451,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(clickOnVar);
   context.subscriptions.push(openWorkDir);
   context.subscriptions.push(updateWorkDir);
+  context.subscriptions.push(addWorkDir);
   context.subscriptions.push(deleteDictionary);
   context.subscriptions.push(commandAddDictionaries);
   context.subscriptions.push(commandClickOnDicItem);
@@ -430,7 +464,10 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(copyVarsToCSV);
   context.subscriptions.push(viewDocOnTable);
   context.subscriptions.push(commandExportToExcel);
+  context.subscriptions.push(deactivateCopy);
+  context.subscriptions.push(activateCopy);
   context.subscriptions.push(completionItemProvider(context));
+  context.subscriptions.push(dictDecoration);
 
   vscode.window.registerTreeDataProvider("dic-list", dictionaryProvider);
   vscode.window.registerTreeDataProvider("dic-tabs", dicTabProvider);

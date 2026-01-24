@@ -6,7 +6,7 @@ type RectProps = typeof Rect.prototype.infos;
 export class Line {
   rect1: Rect;
   rect2: Rect;
-  #color = "#3f3f3f";
+  #color = "#525252"; //"#3f3f3f";
   #width = 0.5;
   #curve = 10;
   #shadowOffset = 0;
@@ -19,9 +19,9 @@ export class Line {
     if (this.isMoving) {
       this.rect1.backgroundColor = theme.surface[2];
       this.rect2.backgroundColor = theme.surface[2];
-      this.#width = this.#width + 1;
-      this.#shadowOffset = 0.25;
-      this.#color = "grey";
+      this.#width = this.#width + 0.5;
+      //this.#shadowOffset = 0.25;
+      this.#color = "gray";
     }
   }
   set color(value: string) {
@@ -34,19 +34,25 @@ export class Line {
   draw = (ctx: CanvasRenderingContext2D) => {
     ctx.save();
     ctx.lineWidth = this.#width;
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
+    ctx.lineJoin = "miter";
+    ctx.lineCap = "butt";
     ctx.imageSmoothingQuality = "high";
     ctx.strokeStyle = this.#color;
-    ctx.shadowBlur = 3;
+    ctx.shadowBlur = 0; //3;
     ctx.shadowColor = "gray";
     ctx.shadowOffsetX = this.#shadowOffset;
     ctx.shadowOffsetY = this.#shadowOffset;
     //ctx.globalAlpha = 0.5;
     const curve = { p2x: this.#curve, p2y: this.#curve, p3x: this.#curve };
 
-    const left_rect = { h: this.rect1.infos.h, w: this.rect1.infos.w } as RectProps;
-    const right_rect = { h: this.rect2.infos.h, w: this.rect2.infos.w } as RectProps;
+    const left_rect = {
+      h: this.rect1.infos.h,
+      w: this.rect1.infos.w,
+    } as RectProps;
+    const right_rect = {
+      h: this.rect2.infos.h,
+      w: this.rect2.infos.w,
+    } as RectProps;
     const p1 = {} as RectProps;
     const p2 = {} as RectProps;
     const p3 = {} as RectProps;
@@ -77,7 +83,10 @@ export class Line {
     p4.w = left_rect.w;
     p1.x = right_rect.x + right_rect.w;
     p1.y = right_rect.y + right_rect.h / 2;
-    p2.x = left_rect.x + left_rect.w - (left_rect.x + left_rect.w - right_rect.x) / 2;
+    p2.x =
+      left_rect.x +
+      left_rect.w -
+      (left_rect.x + left_rect.w - right_rect.x) / 2;
     p2.y = p1.y;
     p3.x = p2.x;
     p3.y = left_rect.y + left_rect.h / 2;

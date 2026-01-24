@@ -1,5 +1,10 @@
 declare module "xlsx-style";
-type listDico = { name?: string; link?: string; work_dir?: string }[];
+type listDico = {
+  name?: string;
+  link?: string;
+  work_dir?: string;
+  disable?: boolean;
+}[];
 
 interface InputBoxParameters {
   title: string;
