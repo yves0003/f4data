@@ -339,6 +339,7 @@
     "lodash": "^4.17.21",
     "markdown-it-collapsible": "^2.0.2",
     "markdown-it-highlightjs": "^4.2.0",
+    "markdown-it-prism": "^3.0.1",
     "worker-threads": "^1.0.0",
     "xlsx-js-style": "^1.2.0"
   }

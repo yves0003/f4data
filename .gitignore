@@ -5,3 +5,4 @@ node_modules
 *.vsix
 notes.txt
 .DS_Store
+issues.txt

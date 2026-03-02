@@ -490,6 +490,7 @@ export async function activate(context: vscode.ExtensionContext) {
       return md
         .use(require("markdown-it-collapsible"))
         .use(require("markdown-it-highlightjs"));
+      //.use(require("markdown-it-prism"))
     },
   };
 }
