@@ -1,4 +1,4 @@
-![f4data](https://img.shields.io/badge/f4data-0.6.0-blue)
+![f4data](https://img.shields.io/badge/f4data-0.7.5-blue)
 
 # f4data — Data Dictionary for VS Code
 

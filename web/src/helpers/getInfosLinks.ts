@@ -10,6 +10,7 @@ interface LinkRect {
     table: string;
     variable: string;
   };
+  relationship: string;
 }
 [];
 
@@ -34,7 +35,7 @@ export const getInfosLinks = (
         variable.infos.name.toLowerCase() === link.rect2.variable.toLowerCase()
     );
     if (rect1 && rect2) {
-      list.push(Line.fromObject({ rect1, rect2 }));
+      list.push(Line.fromObject({ rect1, rect2, relationship: link.relationship }));
     }
   }
   return list;

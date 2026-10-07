@@ -27,8 +27,11 @@ import {
   getAllGlobalState,
   updateGlobalState,
 } from "./helpers/getAllGlobalKeys";
+import { syncSharedFile } from "./helpers/mcpSync";
+import { syncClientsConfig } from "./helpers/clientsSync";
 import { exportToExcel } from "./commands/exportToExcel";
 import { DictionaryPrivDec } from "./providers/dictionaryPrivDec";
+import { saveKnowledgeBase } from "./helpers/knowledgeBase";
 
 interface State {
   title: string;
@@ -39,7 +42,7 @@ type keytouse = "name" | "link";
 const upsert = function (
   arr: listDico,
   keyToUse: keytouse,
-  newval: Partial<listDico[0]>
+  newval: Partial<listDico[0]>,
 ) {
   let key: { [x: string]: string } = {};
   if (newval[keyToUse] !== undefined) {
@@ -73,6 +76,7 @@ export async function activate(context: vscode.ExtensionContext) {
   } = { name: "", tables: [], mappings: [], links: [] };
   let listVarTabsInfo: OutputTable | undefined;
   const dictionaryProvider = new DictionaryProvider(context);
+  void syncClientsConfig(context.extensionPath);
   const dictionaryPrivDec = new DictionaryPrivDec(context);
   const dicListView = vscode.window.createTreeView("dic-list", {
     treeDataProvider: dictionaryProvider,
@@ -89,7 +93,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.window.registerFileDecorationProvider(dictionaryPrivDec);
   const displayMapOnView = vscode.window.registerWebviewViewProvider(
     mapProvider.viewType,
-    mapProvider
+    mapProvider,
   );
   const refreshAll = vscode.commands.registerCommand(
     "f4data.refreshAll",
@@ -109,19 +113,25 @@ export async function activate(context: vscode.ExtensionContext) {
         listTabsInfo = { name: "", tables: [], mappings: [], links: [] };
         vscode.window.showInformationMessage("Actualisé !!!!");
         vscode.commands.executeCommand(
-          "workbench.action.focusActiveEditorGroup"
+          "workbench.action.focusActiveEditorGroup",
         );
         //dictionaryProvider.refresh();
       } else {
         vscode.window.showErrorMessage("Error : Actualisation!!!!");
       }
-    }
+    },
   );
   const commandExportToExcel = vscode.commands.registerCommand(
     "f4data.exportToExcel",
+    async (dicItem?: Dictionary) => {
+      await exportToExcel(context, dicItem?.label);
+    },
+  );
+  const commandExportAllToExcel = vscode.commands.registerCommand(
+    "f4data.exportAllToExcel",
     async () => {
       await exportToExcel(context);
-    }
+    },
   );
   const commandAddDictionaries = vscode.commands.registerCommand(
     "f4data.addDictionaries",
@@ -134,7 +144,7 @@ export async function activate(context: vscode.ExtensionContext) {
       const list_dics = await getFilesByExtension(state.link, "rd");
       const list_snippet = await getFilesByExtension(state.link, "json");
       const snippetlink = list_snippet.find((e) =>
-        e.filename.toLowerCase().includes("sas")
+        e.filename.toLowerCase().includes("sas"),
       );
       //const savedDictionaries = config.get("list") as listDico;
       const savedDictionaries = (getAllGlobalState(context)["f4data.list"] ||
@@ -153,23 +163,21 @@ export async function activate(context: vscode.ExtensionContext) {
         const globalStateUpdate = updateGlobalState(context);
         await globalStateUpdate(
           "f4data.list",
-          upsert(savedDictionaries, "name", dictToAdd)
+          upsert(savedDictionaries, "name", dictToAdd),
         );
       }
+      void syncSharedFile(
+        getAllGlobalState(context)["f4data.list"] as listDico,
+      );
       if (snippetlink) {
-        // await config.update(
-        //   "snippetPath",
-        //   snippetlink.filePath,
-        //   vscode.ConfigurationTarget.Global
-        // );
         const globalStateUpdate = updateGlobalState(context);
         await globalStateUpdate("f4data.snippetPath", snippetlink.filePath);
         vscode.window.showInformationMessage(
-          "SAS snippet path updated. Please reload the window to apply."
+          "SAS snippet path updated. Please reload the window to apply.",
         );
       }
       dictionaryProvider.refresh();
-    }
+    },
   );
   const commandClickOnDicItem = vscode.commands.registerCommand(
     "f4data.clickOnDicItem",
@@ -184,14 +192,14 @@ export async function activate(context: vscode.ExtensionContext) {
         listTabsInfo = await parseFileInWorker(selectDicLink, dicItem.label);
         dicTabProvider.setLink(path.dirname(selectDicLink || ""));
         dicTabProvider.setData(
-          listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name))
+          listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name)),
         );
         title_tab.setTitle(
           `Tables${
             listTabsInfo.tables.length > 0
               ? ` (${listTabsInfo.tables.length})`
               : ""
-          }`
+          }`,
         );
         title_var.setTitle(`Variables`);
         listVarTabsInfo = undefined;
@@ -201,19 +209,19 @@ export async function activate(context: vscode.ExtensionContext) {
         const docFolder = findMatchingDirectory(
           path.dirname(selectDicLink || ""),
           ["documents", "docs", "doc", "document"],
-          { caseSensitive: false }
+          { caseSensitive: false },
         );
         if (docFolder) {
           const listDocs = await getAllMarkdownFiles(docFolder);
           docProvider.setData(
-            listDocs.sort((a, b) => a.filename.localeCompare(b.filename))
+            listDocs.sort((a, b) => a.filename.localeCompare(b.filename)),
           );
         } else {
           docProvider.setData([]);
         }
         dictionaryProvider.revealItem(dicItem.label);
       }
-    }
+    },
   );
   const commandClickOnTable = vscode.commands.registerCommand(
     "f4data.clickOnTable",
@@ -228,7 +236,7 @@ export async function activate(context: vscode.ExtensionContext) {
               listVarTabsInfo.variables.length > 0
                 ? ` (${listVarTabsInfo.variables.length})`
                 : ""
-            }`
+            }`,
           );
         } else {
           selectedTab = "";
@@ -236,7 +244,7 @@ export async function activate(context: vscode.ExtensionContext) {
           vscode.window.showWarningMessage(`No vars for : ${item.label}`);
         }
       }
-    }
+    },
   );
   const displayDoc = vscode.commands.registerCommand(
     "f4data.clickOnDoc",
@@ -246,14 +254,14 @@ export async function activate(context: vscode.ExtensionContext) {
         //await vscode.commands.executeCommand("vscode.open", markdownUri);
         await vscode.commands.executeCommand(
           "markdown.showPreview",
-          markdownUri
+          markdownUri,
         );
       } else {
         vscode.window.showWarningMessage(
-          "No markdown file associated with this item."
+          "No markdown file associated with this item.",
         );
       }
-    }
+    },
   );
   const copyVarVal = vscode.commands.registerCommand(
     "f4data.copyVarVal",
@@ -264,7 +272,7 @@ export async function activate(context: vscode.ExtensionContext) {
       } else {
         vscode.window.showWarningMessage("No label to copy.");
       }
-    }
+    },
   );
   const toggleCopyActivation =
     (status: boolean) => async (item: Dictionary) => {
@@ -276,13 +284,14 @@ export async function activate(context: vscode.ExtensionContext) {
       ] as listDico;
 
       const updated = dictionaries.map((dict) =>
-        dict.name === item.label ? { ...dict, disable: status } : dict
+        dict.name === item.label ? { ...dict, disable: status } : dict,
       );
 
       const globalStateUpdate = updateGlobalState(context);
       await globalStateUpdate("f4data.list", updated);
+      void syncSharedFile(updated);
       const uri = vscode.Uri.parse(
-        `f4data-dictionary:/${encodeURIComponent(item.label)}`
+        `f4data-dictionary:/${encodeURIComponent(item.label)}`,
       );
       dictionaryProvider.refresh();
       dictionaryPrivDec.refresh(uri);
@@ -309,34 +318,34 @@ export async function activate(context: vscode.ExtensionContext) {
       }
       await toggleCopyActivation(false)(item);
       //mapProvider.updateContent([], "");
-    }
+    },
   );
   const openWorkDir = vscode.commands.registerCommand(
     "f4data.openWorkDir",
     async (item: Dictionary) => {
       await dictionaryProvider.on_open_work_dir(item);
       dictionaryProvider.refresh();
-    }
+    },
   );
   const deactivateCopy = vscode.commands.registerCommand(
     "f4data.deactivateCopy",
-    toggleCopyActivation(true)
+    toggleCopyActivation(true),
   );
   const activateCopy = vscode.commands.registerCommand(
     "f4data.activateCopy",
-    toggleCopyActivation(false)
+    toggleCopyActivation(false),
   );
   const displayMapOnClick = vscode.commands.registerCommand(
     "f4data.displayMap",
     async (item) => {
       if (selectedDic.length > 0 && allMappDic.length > 0) {
         const selectedMapp = allMappDic.find(
-          (e) => e.name.toLowerCase() === item.valName.toLowerCase()
+          (e) => e.name.toLowerCase() === item.valName.toLowerCase(),
         );
         if (selectedMapp && selectedMapp.members.length > 0) {
           mapProvider.setDataAndUpdateContent(
             selectedMapp.members,
-            item.valName
+            item.valName,
           );
         } else {
           vscode.window.showErrorMessage(`Mapping Values are not defined`);
@@ -345,7 +354,7 @@ export async function activate(context: vscode.ExtensionContext) {
       } else {
         vscode.window.showErrorMessage(`Dictionay not defined`);
       }
-    }
+    },
   );
   const addWorkDir = vscode.commands.registerCommand(
     "f4data.addWorkDir",
@@ -353,7 +362,7 @@ export async function activate(context: vscode.ExtensionContext) {
       await dictionaryProvider.on_update_work_dir(item);
       dictionaryProvider.refresh();
       vscode.window.showInformationMessage(`Directory added`);
-    }
+    },
   );
   const updateWorkDir = vscode.commands.registerCommand(
     "f4data.updateWorkDir",
@@ -361,13 +370,13 @@ export async function activate(context: vscode.ExtensionContext) {
       await dictionaryProvider.on_update_work_dir(item);
       dictionaryProvider.refresh();
       vscode.window.showInformationMessage(`Directory updated`);
-    }
+    },
   );
   const clickOnVar = vscode.commands.registerCommand(
     "f4data.clickOnVar",
     () => {
       mapProvider.setDataAndUpdateContent([], "");
-    }
+    },
   );
   const displayDiagramPage = vscode.commands.registerCommand(
     "f4data.mapWebview",
@@ -381,7 +390,7 @@ export async function activate(context: vscode.ExtensionContext) {
         listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name));
       }
       MapPanelDiag.render(context.extensionUri, dicItem, listTabsInfo);
-    }
+    },
   );
   const displaySearchPage = vscode.commands.registerCommand(
     "f4data.searchWebview",
@@ -395,7 +404,7 @@ export async function activate(context: vscode.ExtensionContext) {
         listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name));
       }
       SearchPanelDiag.render(context.extensionUri, dicItem, listTabsInfo);
-    }
+    },
   );
   const copyTableToCSV = vscode.commands.registerCommand(
     "f4data.copyTableToCSV",
@@ -415,7 +424,7 @@ export async function activate(context: vscode.ExtensionContext) {
       } catch (err) {
         vscode.window.showErrorMessage(`Failed to copy : ${err}`);
       }
-    }
+    },
   );
   const copyVarsToCSV = vscode.commands.registerCommand(
     "f4data.copyVarsToCSV",
@@ -435,7 +444,7 @@ export async function activate(context: vscode.ExtensionContext) {
       } else {
         vscode.window.showErrorMessage(`Failed to copy : No vars`);
       }
-    }
+    },
   );
   const viewDocOnTable = vscode.commands.registerCommand(
     "f4data.viewDocOnTable",
@@ -443,7 +452,34 @@ export async function activate(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage(item.label);
       const markdownUri = vscode.Uri.file(item.docLink);
       await vscode.commands.executeCommand("markdown.showPreview", markdownUri);
-    }
+    },
+  );
+  const openSearchFromExplorer = vscode.commands.registerCommand(
+    "f4data.openSearchFromExplorer",
+    async (uri: vscode.Uri) => {
+      const filePath = uri.fsPath;
+      const label = path.basename(filePath, ".rd");
+      listTabsInfo = await parseFileInWorker(filePath, label);
+      listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name));
+      SearchPanelDiag.render(context.extensionUri, { label }, listTabsInfo);
+    },
+  );
+  const openMapFromExplorer = vscode.commands.registerCommand(
+    "f4data.openMapFromExplorer",
+    async (uri: vscode.Uri) => {
+      const filePath = uri.fsPath;
+      const label = path.basename(filePath, ".rd");
+      listTabsInfo = await parseFileInWorker(filePath, label);
+      listTabsInfo.tables.sort((a, b) => a.name.localeCompare(b.name));
+      MapPanelDiag.render(context.extensionUri, { label }, listTabsInfo);
+    },
+  );
+  const generateContext = vscode.commands.registerCommand(
+    "f4data.generateContext",
+    async () => {
+      await saveKnowledgeBase(getAllGlobalState(context)["f4data.list"]);
+      await vscode.window.showInformationMessage(`Context saved`);
+    },
   );
   context.subscriptions.push(copyVarVal);
   context.subscriptions.push(displayDoc);
@@ -464,10 +500,14 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(copyVarsToCSV);
   context.subscriptions.push(viewDocOnTable);
   context.subscriptions.push(commandExportToExcel);
+  context.subscriptions.push(commandExportAllToExcel);
   context.subscriptions.push(deactivateCopy);
   context.subscriptions.push(activateCopy);
   context.subscriptions.push(completionItemProvider(context));
   context.subscriptions.push(dictDecoration);
+  context.subscriptions.push(openSearchFromExplorer);
+  context.subscriptions.push(openMapFromExplorer);
+  context.subscriptions.push(generateContext);
 
   vscode.window.registerTreeDataProvider("dic-list", dictionaryProvider);
   vscode.window.registerTreeDataProvider("dic-tabs", dicTabProvider);

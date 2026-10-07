@@ -4,6 +4,7 @@
 table users as us {
 	id integer [pk, "unique"]
 	'test id' integer ["unique", pk]
+	list_users varchar
 	username varchar
 	role varchar
 	created_at timestamp
@@ -25,8 +26,10 @@ table user_admin {
 	list_users varchar
 	testament_user_dm varchar
 	job_status varchar
+	period: 'YYYY_MM'
+	note: 'One dataset per month named user_admin_YYYY_MM'
 }
-# Table des utilisateufrs é de travaux.
+# Table des utilisateufrs é de travaux pour les ateliers.
 table test.ateliers as test {
 	id integer
 	titre varchar
@@ -37,13 +40,13 @@ table test.ateliers as test {
 
 ref : ateliers.list_users > users.id
 ref : ateliers.id - users.id
-ref : yves.id <> users.'test id'
+ref : user_admin.id <> users.'test id'
 
 enum user_admin.job_status {
 red : test
 }
 
-enum user_admin.list_users atelierds.id {
+enum user_admin.list_users atelierds.id users.list_users {
 created : status at the beginning of the process [note: "Waiting to be processed's"]
 running : statut when activate
 done : status after completion
@@ -55,4 +58,8 @@ enum atelierds.titre {
 running : statut when activate
 done : status after completion
 'failure error' : status when error occurs
+}
+
+enum libnames {
+	test: '/sas_dir/test/alelier' [note: 'table des ateliers. last update: 2026-06']
 }

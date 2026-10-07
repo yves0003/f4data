@@ -5,6 +5,7 @@ import {
   window,
   Uri,
   ViewColumn,
+  workspace,
 } from "vscode";
 import { getUri, getUriWithHash } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
@@ -182,20 +183,31 @@ export class MapPanelDiag {
    */
   private _setWebviewMessageListener(webview: Webview) {
     webview.onDidReceiveMessage(
-      (message: any) => {
+      async (message: any) => {
         const command = message.command;
         const text = message.text;
         switch (command) {
           case "hello":
-            // Code that should run in response to the hello message command
             window.showInformationMessage(text);
             return;
-          // Add more switch case statements here as more webview message commands
-          // are created within the webview context (i.e. inside media/main.js)
+          case "exportPng": {
+            const uri = await window.showSaveDialog({
+              filters: { Images: ["png"] },
+              saveLabel: "Export PNG",
+              defaultUri: Uri.file("diagram.png"),
+            });
+            if (!uri) return;
+            const base64 = (message.data as string).replace(
+              /^data:image\/png;base64,/,
+              ""
+            );
+            await workspace.fs.writeFile(uri, Buffer.from(base64, "base64"));
+            window.showInformationMessage(`PNG exported: ${uri.fsPath}`);
+            return;
+          }
         }
         if (message.type === "ready") {
           this._panel.webview.postMessage({
-            //2
             type: "init",
             payload: MapPanelDiag._listTabsInfo,
           });

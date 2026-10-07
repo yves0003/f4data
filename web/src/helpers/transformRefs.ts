@@ -18,7 +18,7 @@ export function transformRefs(refs: Ref[]): Transformed[] {
       const key = getKey(rect1, rect2);
       if (!seen.has(key)) {
         seen.add(key);
-        result.push({ rect1, rect2 });
+        result.push({ rect1, rect2, relationship: ref.relationship });
       }
     }
   }

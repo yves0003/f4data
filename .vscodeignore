@@ -14,6 +14,8 @@ vsc-extension-quickstart.md
 **/src/**
 **/*.ts
 .vscode/
+web/src/**
+web/public/**
 web/package*
 web/.eslintrc*
 web_search/package*
@@ -21,4 +23,7 @@ web_search/.eslintrc*
 web_search/*.txt
 web_search/node_modules
 web/node_modules
-mcp
+packages/mcp-server/node_modules
+packages/mcp-server/src
+packages/mcp-server/tsconfig.json
+packages/mcp-server/package*.json

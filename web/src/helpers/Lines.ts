@@ -2,6 +2,7 @@ import { theme } from "../components/Table";
 import { Rect } from "./rect";
 
 type RectProps = typeof Rect.prototype.infos;
+type EndSymbol = "bar" | "crow";
 
 export class Line {
   rect1: Rect;
@@ -10,11 +11,13 @@ export class Line {
   #width = 0.5;
   #curve = 10;
   #shadowOffset = 0;
+  #relationship = "-";
   isMoving = false;
 
-  constructor(line: { rect1: Rect; rect2: Rect }) {
+  constructor(line: { rect1: Rect; rect2: Rect; relationship?: string }) {
     this.rect1 = line.rect1;
     this.rect2 = line.rect2;
+    this.#relationship = line.relationship ?? "-";
     this.isMoving = line.rect1.isMoving || line.rect2.isMoving;
     if (this.isMoving) {
       this.rect1.backgroundColor = theme.surface[2];
@@ -122,20 +125,115 @@ export class Line {
     drawLines(ctx, curve)(p1, p2, p3, p4);
     ctx.restore();
   };
-  static fromObject(lineProps: { rect1: Rect; rect2: Rect }) {
+
+  #endPoints() {
+    const rect1IsLeft = !(this.rect1.x > this.rect2.x);
+    const lr = rect1IsLeft
+      ? { l: this.rect1.infos, r: this.rect2.infos }
+      : { l: this.rect2.infos, r: this.rect1.infos };
+
+    const w1w2 = lr.l.w + lr.r.w;
+    const ecart = lr.r.x + lr.r.w - lr.l.x;
+    const wrapAround = Math.abs(ecart) - this.#curve * 2 < w1w2;
+
+    const p1x = lr.r.x;
+    const p4x = wrapAround ? lr.l.x : lr.l.x + lr.l.w;
+    // when wrapping around, the line exits from the left side of the left table
+    const p4Dir: "left" | "right" = wrapAround ? "left" : "right";
+
+    return {
+      p1: { x: p1x, y: lr.r.y + lr.r.h / 2 },
+      p4: { x: p4x, y: lr.l.y + lr.l.h / 2 },
+      p4Dir,
+      rect1IsLeft,
+    };
+  }
+
+  // Called in a second pass after all tables are drawn, so symbols appear on top.
+  drawSymbols = (ctx: CanvasRenderingContext2D) => {
+    const { p1, p4, p4Dir, rect1IsLeft } = this.#endPoints();
+    const rect1Sym: EndSymbol =
+      this.#relationship === ">" || this.#relationship === "<>"
+        ? "crow"
+        : "bar";
+    const rect2Sym: EndSymbol =
+      this.#relationship === "<" || this.#relationship === "<>"
+        ? "crow"
+        : "bar";
+    const p4Sym = rect1IsLeft ? rect1Sym : rect2Sym;
+    const p1Sym = rect1IsLeft ? rect2Sym : rect1Sym;
+
+    const p4BarSign = p4Dir === "right" ? 1 : -1;
+    drawEndSymbol(
+      ctx,
+      { ...p4, x: p4.x + (p4Sym === "bar" ? p4BarSign * 5 : 0) },
+      p4Dir,
+      p4Sym,
+      this.#color,
+    );
+    drawEndSymbol(
+      ctx,
+      { ...p1, x: p1.x - (p1Sym === "bar" ? 5 : 0) },
+      "left",
+      p1Sym,
+      this.#color,
+    );
+  };
+
+  static fromObject(lineProps: {
+    rect1: Rect;
+    rect2: Rect;
+    relationship?: string;
+  }) {
     return new Line(lineProps);
   }
 }
 
+function drawEndSymbol(
+  ctx: CanvasRenderingContext2D,
+  p: { x: number; y: number },
+  dir: "left" | "right",
+  symbol: EndSymbol,
+  color?: string,
+) {
+  const barSize = 6;
+  const crowLen = 7;
+  const crowSpread = 5;
+  const sign = dir === "right" ? 1 : -1;
+
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.6;
+  if (color) {
+    ctx.strokeStyle = color;
+  }
+  ctx.beginPath();
+  if (symbol === "bar") {
+    ctx.moveTo(p.x, p.y - barSize);
+    ctx.lineTo(p.x, p.y + barSize);
+  } else {
+    // Three lines fan from a convergence point (fx) to three separate points at the table edge
+    const fx = p.x + sign * crowLen;
+    ctx.moveTo(fx, p.y);
+    ctx.lineTo(p.x, p.y - crowSpread);
+    ctx.moveTo(fx, p.y);
+    ctx.lineTo(p.x, p.y);
+    ctx.moveTo(fx, p.y);
+    ctx.lineTo(p.x, p.y + crowSpread);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawLines(
   ctx: CanvasRenderingContext2D,
-  curve: { p2x: number; p2y: number; p3x: number }
+  curve: { p2x: number; p2y: number; p3x: number },
 ) {
   return function (
     p1: { x: number; y: number },
     p2: { x: number; y: number },
     p3: { x: number; y: number },
-    p4: { x: number; y: number }
+    p4: { x: number; y: number },
   ) {
     //Draw dots
     // ctx.save();

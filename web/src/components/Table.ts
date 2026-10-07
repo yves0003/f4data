@@ -22,6 +22,8 @@ export class Table {
   #margin = 5;
   cursorIsIn: boolean;
 
+  #radius = 3;
+
   constructor(table: OutputTable, ctx: CanvasRenderingContext2D) {
     this.#table = table;
     const variables = this.#table.variables;
@@ -30,6 +32,7 @@ export class Table {
     const height = this.#fontSize + this.#margin * 2;
     const x = this.#table.position.pos_x;
     const y = this.#table.position.pos_y;
+    const r = this.#radius;
     this.cursorIsIn = table.cursorIsIn;
     //const rootStyle = getComputedStyle(document.body);
     //--vscode-editor-foreground
@@ -41,6 +44,9 @@ export class Table {
         rect.colorText = this.#headerTextColor;
         //rect.colorText = rootStyle.getPropertyValue('--vscode-editor-foreground');
         rect.textSize = this.#fontSize;
+        // rounded top corners (no variables = also round bottom)
+        const onlyHeader = variables.length === 0;
+        rect.cornerRadii = onlyHeader ? [r, r, r, r] : [r, r, 0, 0];
         this.#tabHeader = rect;
       }
       //variables
@@ -51,6 +57,10 @@ export class Table {
       rect.backgroundColor = variables[i].color || this.#tabBg;
       rect.colorText = this.#tabTextColor;
       rect.textSize = this.#fontSize;
+      // rounded bottom corners on last variable row
+      if (i === variables.length - 1) {
+        rect.cornerRadii = [0, 0, r, r];
+      }
       this.#variables.push(rect);
     }
   }

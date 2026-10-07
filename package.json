@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/yves0003/f4data.git"
   },
-  "version": "0.6.0",
+  "version": "0.7.5",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -30,12 +30,13 @@
     {
       "href": "https://yveszendja.com",
       "description": "badge version",
-      "url": "https://img.shields.io/badge/f4data-0.6.0-blue"
+      "url": "https://img.shields.io/badge/f4data-0.7.5-blue"
     }
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onView:dic-explorer"
+    "onView:dic-explorer",
+    "onLanguage:rd"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -66,6 +67,11 @@
     },
     "commands": [
       {
+        "command": "f4data.generateContext",
+        "title": "Generate Context",
+        "icon": "$(find-selection)"
+      },
+      {
         "command": "f4data.searchWebview",
         "title": "Search in dictionary",
         "icon": "$(eye)"
@@ -76,9 +82,13 @@
         "icon": "$(link)"
       },
       {
-        "command": "f4data.exportToExcel",
-        "title": "Export Xlsx",
+        "command": "f4data.exportAllToExcel",
+        "title": "Export all to XLSX",
         "icon": "$(save)"
+      },
+      {
+        "command": "f4data.exportToExcel",
+        "title": "Export to XLSX"
       },
       {
         "command": "f4data.addDictionaries",
@@ -97,7 +107,7 @@
       },
       {
         "command": "f4data.deleteAdict",
-        "title": "Delete"
+        "title": "Hide"
       },
       {
         "command": "f4data.deactivateCopy",
@@ -142,6 +152,16 @@
         "command": "f4data.viewDocOnTable",
         "title": "Open the documentation",
         "icon": "$(book)"
+      },
+      {
+        "command": "f4data.openSearchFromExplorer",
+        "title": "f4data: Search in dictionary",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "f4data.openMapFromExplorer",
+        "title": "f4data: Display Webview",
+        "icon": "$(link)"
       }
     ],
     "viewsContainers": {
@@ -213,7 +233,12 @@
           "group": "navigation@2"
         },
         {
-          "command": "f4data.exportToExcel",
+          "command": "f4data.generateContext",
+          "when": "view == dic-list",
+          "group": "navigation@0"
+        },
+        {
+          "command": "f4data.exportAllToExcel",
           "when": "view == dic-list",
           "group": "navigation@1"
         },
@@ -255,6 +280,11 @@
           "group": "2_delete"
         },
         {
+          "when": "view == dic-list && viewItem =~ /^dictionary:active/",
+          "command": "f4data.exportToExcel",
+          "group": "2_delete"
+        },
+        {
           "when": "view == dic-list && viewItem =~ /^dictionary:inactive/",
           "command": "f4data.activateCopy",
           "group": "2_delete"
@@ -284,6 +314,18 @@
           "command": "f4data.viewDocOnTable",
           "group": "inline@1"
         }
+      ],
+      "explorer/context": [
+        {
+          "command": "f4data.openSearchFromExplorer",
+          "when": "resourceExtname == .rd",
+          "group": "f4data@1"
+        },
+        {
+          "command": "f4data.openMapFromExplorer",
+          "when": "resourceExtname == .rd",
+          "group": "f4data@2"
+        }
       ]
     },
     "languages": [
@@ -308,7 +350,7 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run build:webview && npm run build:websearch && npm run compile",
+    "vscode:prepublish": "npm run build:webview && npm run build:websearch && npm run build:mcp && npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
@@ -317,6 +359,7 @@
     "start:webview": "cd web && npm run start",
     "build:webview": "cd web && npm run build",
     "build:websearch": "cd web_search && npm run build",
+    "build:mcp": "cd packages/mcp-server && npm run build",
     "build:vsix": "vsce package -o ./packages"
   },
   "extensionKind": [
@@ -326,7 +369,7 @@
   "devDependencies": {
     "@types/lodash": "^4.17.16",
     "@types/mocha": "^10.0.10",
-    "@types/node": "20.x",
+    "@types/node": "^20.19.35",
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^8.28.0",
     "@typescript-eslint/parser": "^8.28.0",

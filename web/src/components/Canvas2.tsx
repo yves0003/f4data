@@ -18,6 +18,7 @@ import { sortElementsToDraw } from "../helpers/sortElementsToDraw";
 import { cursorIsInTable, getElementAtPosition } from "../utils";
 import { ZoomControls } from "./ZoomControls";
 import { OutputTable } from "../helpers/ast_to_data2";
+import { vscode } from "../utilities/vscode";
 type CanvasAction = "none" | "moving" | "movePlan" | "rightClick" | "zoom";
 type SelectedElement = OutputTable & { offsetX: number; offsetY: number };
 type TableType = OutputTable;
@@ -75,7 +76,7 @@ const Canvas = ({
     const canvasHeight = clientHeight;
     layoutManagerRef.current = new CanvasLayoutManager(
       canvasWidth,
-      canvasHeight
+      canvasHeight,
     );
   }, [clientWidth, clientHeight, editorWidth, state, listTables]);
 
@@ -85,7 +86,7 @@ const Canvas = ({
       clientX: (event.clientX - editorWidth - state.pan.x) / state.scale,
       clientY: (event.clientY - state.pan.y) / state.scale,
     }),
-    [editorWidth, state.pan.x, state.pan.y, state.scale]
+    [editorWidth, state.pan.x, state.pan.y, state.scale],
   );
 
   // Canvas interaction handlers
@@ -105,7 +106,7 @@ const Canvas = ({
         state.elements,
         context,
         fontSize,
-        margin
+        margin,
       );
       if (!element) {
         const elementUnderCursor = cursorIsInTable(
@@ -114,7 +115,7 @@ const Canvas = ({
           state.elements,
           context,
           fontSize,
-          margin
+          margin,
         );
         if (!elementUnderCursor) {
           state.setAction("movePlan");
@@ -170,7 +171,7 @@ const Canvas = ({
                 state.elements,
                 context,
                 fontSize,
-                margin
+                margin,
               );
               const elementUnderCursor = cursorIsInTable(
                 clientX,
@@ -178,13 +179,13 @@ const Canvas = ({
                 state.elements,
                 context,
                 fontSize,
-                margin
+                margin,
               );
 
               if (elementUnderCursor) {
                 state.setElements((draft) => {
                   const element = draft.find(
-                    (e) => e._id === elementUnderCursor._id
+                    (e) => e._id === elementUnderCursor._id,
                   );
                   if (element) {
                     element.cursorIsIn = true;
@@ -235,7 +236,7 @@ const Canvas = ({
         }
       }
     },
-    [editorWidth, getMouseCoordinates, fontSize, state]
+    [editorWidth, getMouseCoordinates, fontSize, state],
   );
 
   const panRef = useRef(state.pan);
@@ -282,7 +283,7 @@ const Canvas = ({
       state.setPan({ x: newPanX, y: newPanY });
       state.setScale(newScale);
     },
-    [state, clientWidth, clientHeight, editorWidth]
+    [state, clientWidth, clientHeight, editorWidth],
   );
   const handleWheel = (event: WheelEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -295,7 +296,7 @@ const Canvas = ({
     clearTimeout(wheelTimeoutRef.current);
     wheelTimeoutRef.current = setTimeout(
       () => state.setAction("none"),
-      500
+      500,
     ) as unknown as number;
   };
 
@@ -314,7 +315,7 @@ const Canvas = ({
       }, 0);
       return maxWidth + margin * 2;
     },
-    []
+    [],
   );
 
   const getElementHeight = useCallback(
@@ -325,7 +326,7 @@ const Canvas = ({
         (fontSize + margin * 2)
       );
     },
-    []
+    [],
   );
   useEffect(() => {
     state.setElements((draft) => {
@@ -413,18 +414,19 @@ const Canvas = ({
     ctx.scale(state.scale, state.scale);
 
     const allTables = state.elements.map((table) =>
-      Table.fromObject(table)(ctx)
+      Table.fromObject(table)(ctx),
     );
     //const allTables = listTables.map(table => Table.fromObject(table)(ctx));
     //const allLinks = linkTest.reduce(
     const allLinks = listLinks.reduce(
       (list, link) => getInfosLinks(list, link, allTables),
-      [] as Line[]
+      [] as Line[],
     );
 
     const combinedArray = [...allLinks, ...allTables];
     const allElementsToDraw = combinedArray.sort(sortElementsToDraw);
     allElementsToDraw.forEach((element) => element.draw(ctx));
+    allLinks.forEach((link) => link.drawSymbols(ctx));
     //allTables.forEach(element => element.draw(ctx));
 
     canvas.addEventListener("contextmenu", (e) => e.preventDefault());
@@ -451,6 +453,13 @@ const Canvas = ({
     return ctx.measureText(text).width;
   };
 
+  const handleExportPng = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dataUrl = canvas.toDataURL("image/png");
+    vscode.postMessage({ command: "exportPng", data: dataUrl });
+  }, []);
+
   return (
     <>
       <canvas
@@ -464,6 +473,7 @@ const Canvas = ({
       <ZoomControls
         scale={state.scale}
         onZoom={handleZoom}
+        onExportPng={handleExportPng}
         editorWidth={editorWidth}
       />
     </>

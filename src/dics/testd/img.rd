@@ -25,7 +25,7 @@ table test.ateliers as test {
 	id integer tata test
 	titre varchar
 	date timestamp
-	#test de mesure
+	#test de mesure avec une mise à jour décallé de 3 mois.
 	List_Users varchar
 }
 

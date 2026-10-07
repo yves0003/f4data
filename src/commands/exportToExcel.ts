@@ -11,7 +11,10 @@ const TABLE_HEADER_COLORS = {
   Tables: "F79646", // orange
   Mapp: "9BBB59", // green
 };
-export async function exportToExcel(context: vscode.ExtensionContext) {
+export async function exportToExcel(
+  context: vscode.ExtensionContext,
+  dictName?: string,
+) {
   let selectedDir: string;
   try {
     const dir = await vscode.window.showOpenDialog({
@@ -32,7 +35,10 @@ export async function exportToExcel(context: vscode.ExtensionContext) {
   }
 
   const dictionaries = getAllGlobalState(context)["f4data.list"] as listDico;
-  const dirWithLink = await filterExistingFiles(dictionaries);
+  let dirWithLink = await filterExistingFiles(dictionaries);
+  if (dictName) {
+    dirWithLink = dirWithLink.filter((dict) => dict.name === dictName);
+  }
 
   if (dirWithLink.length === 0) {
     vscode.window.showErrorMessage("No valid files to export");
@@ -58,7 +64,7 @@ export async function exportToExcel(context: vscode.ExtensionContext) {
           dirInfo,
           selectedDir,
           progress,
-          token
+          token,
         );
         step++;
         progress.report({ increment: (1 / totalSteps) * 100 });
@@ -67,25 +73,29 @@ export async function exportToExcel(context: vscode.ExtensionContext) {
         }
       });
       progress.report({ message: "Done ✔" });
-    }
+    },
   );
+
   if (errors.length) {
     vscode.window.showWarningMessage(
-      `Export completed with ${errors.length} error(s). Check logs.`
+      `Export completed with ${errors.length} error(s). Check logs.`,
     );
   } else {
     const duration = Date.now() - start;
     if (duration < 2000) {
       await delay(2000 - duration);
       vscode.window.showInformationMessage(
-        "All Excel files exported successfully ✔"
+        `${dictName ? `${dictName}.xlsx` : "All Excel files"} exported successfully ✔`,
       );
     } else {
       vscode.window.showInformationMessage(
-        "All Excel files exported successfully ✔"
+        `${dictName ? `${dictName}.xlsx` : "All Excel files"} exported successfully ✔`,
       );
     }
   }
+  // if (dictName) {
+  //   dictName = undefined;
+  // }
 }
 async function filterExistingFiles(dictionaries: listDico) {
   const checks = await Promise.all(
@@ -99,7 +109,7 @@ async function filterExistingFiles(dictionaries: listDico) {
       } catch {
         return null;
       }
-    })
+    }),
   );
 
   return checks.filter(Boolean) as listDico;
@@ -128,7 +138,7 @@ function getHeaderColor(type: "Tables" | "Mapp" | "Default"): string {
 async function runWithConcurrency<T>(
   items: T[],
   limit: number,
-  worker: (item: T) => Promise<void>
+  worker: (item: T) => Promise<void>,
 ) {
   const queue = [...items];
   const workers = Array.from({ length: limit }, async () => {
@@ -147,7 +157,7 @@ async function exportOneFile(
   dirInfo: listDico[0],
   selectedDir: string,
   progress: vscode.Progress<{ message?: string; increment?: number }>,
-  token: vscode.CancellationToken
+  token: vscode.CancellationToken,
 ) {
   try {
     if (token.isCancellationRequested) {
@@ -178,7 +188,7 @@ function createSummarySheet(
     tables: OutputTable[];
     mappings: EnumNodeElt[];
     links: RefNode[];
-  }
+  },
 ) {
   const color = getHeaderColor("Default");
   //tab-contents
@@ -219,7 +229,7 @@ function createTablesSheet(
     tables: OutputTable[];
     mappings: EnumNodeElt[];
     links: RefNode[];
-  }
+  },
 ) {
   const color = getHeaderColor("Tables");
   for (const table of listTabsInfo.tables) {
@@ -276,7 +286,7 @@ function createTablesSheet(
     XLSX.utils.book_append_sheet(
       workbook,
       tableSheet,
-      safeSheetName(table.name)
+      safeSheetName(table.name),
     );
   }
 }
@@ -287,25 +297,33 @@ function createMappingsSheet(
     tables: OutputTable[];
     mappings: EnumNodeElt[];
     links: RefNode[];
-  }
+  },
 ) {
   const color = getHeaderColor("Mapp");
+  const allMapping: string[] = [];
   for (const mapping of listTabsInfo.mappings) {
-    const rows: any[][] = [
-      [
-        { v: "Modalities", t: "s", s: { fill: { fgColor: { rgb: color } } } },
-        { v: "Descriptions", t: "s", s: { fill: { fgColor: { rgb: color } } } },
-        { v: "Notes", t: "s", s: { fill: { fgColor: { rgb: color } } } },
-      ],
-    ];
+    if (!allMapping.includes(mapping.name)) {
+      allMapping.push(mapping.name);
+      const rows: any[][] = [
+        [
+          { v: "Modalities", t: "s", s: { fill: { fgColor: { rgb: color } } } },
+          {
+            v: "Descriptions",
+            t: "s",
+            s: { fill: { fgColor: { rgb: color } } },
+          },
+          { v: "Notes", t: "s", s: { fill: { fgColor: { rgb: color } } } },
+        ],
+      ];
 
-    for (const m of mapping.members) {
-      rows.push([m.key, m.description, m.note]);
+      for (const m of mapping.members) {
+        rows.push([m.key, m.description, m.note]);
+      }
+
+      addBackToSummary(rows);
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      XLSX.utils.book_append_sheet(workbook, ws, safeSheetName(mapping.name));
     }
-
-    addBackToSummary(rows);
-
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    XLSX.utils.book_append_sheet(workbook, ws, safeSheetName(mapping.name));
   }
 }

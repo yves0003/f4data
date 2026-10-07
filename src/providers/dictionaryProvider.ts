@@ -15,23 +15,24 @@ import {
   getAllGlobalState,
   updateGlobalState,
 } from "../helpers/getAllGlobalKeys";
+import { syncSharedFile } from "../helpers/mcpSync";
 
 export class Dictionary extends TreeItem {
   constructor(
     public readonly label: string,
     public readonly disable?: boolean,
     public readonly workDir?: string,
-    public readonly parent?: Dictionary
+    public readonly parent?: Dictionary,
   ) {
     super(label);
     this.resourceUri = Uri.parse(
-      `f4data-dictionary:/${encodeURIComponent(label)}`
+      `f4data-dictionary:/${encodeURIComponent(label)}`,
     );
     this.tooltip = label;
     this.iconPath = disable
       ? new ThemeIcon(
           "database",
-          new vscode.ThemeColor("activityBar.inactiveForeground")
+          new vscode.ThemeColor("activityBar.inactiveForeground"),
         )
       : new ThemeIcon("database");
     this.contextValue = [
@@ -57,11 +58,12 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
     const dictionaries = this.getDictionaryInfos();
     if (dictionaries && dictionaries.length > 0) {
       this.data = dictionaries.map(
-        (dico) => new Dictionary(dico.name || "", dico.disable, dico.work_dir)
+        (dico) => new Dictionary(dico.name || "", dico.disable, dico.work_dir),
       );
     } else {
       this.data = [];
     }
+    void syncSharedFile(dictionaries || []);
   }
 
   private _onDidChangeTreeData: EventEmitter<
@@ -86,7 +88,8 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
       const dictionaries = this.getDictionaryInfos();
       if (dictionaries && dictionaries.length > 0) {
         const dictionariesName = dictionaries.map(
-          (dico) => new Dictionary(dico.name || "", dico.disable, dico.work_dir)
+          (dico) =>
+            new Dictionary(dico.name || "", dico.disable, dico.work_dir),
         );
         return Promise.resolve(dictionariesName);
       } else {
@@ -106,7 +109,8 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
       const dictionaries = this.getDictionaryInfos();
       if (dictionaries && dictionaries.length > 0) {
         let newData = dictionaries.map(
-          (dico) => new Dictionary(dico.name || "", dico.disable, dico.work_dir)
+          (dico) =>
+            new Dictionary(dico.name || "", dico.disable, dico.work_dir),
         );
         if (newData.length !== this.data.length) {
           this.data = newData;
@@ -129,7 +133,7 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
       const dic = new Dictionary(
         item.label,
         selectedDic?.disable,
-        selectedDic?.work_dir
+        selectedDic?.work_dir,
       );
       this.view.reveal(dic, { select: true, focus: true });
     }
@@ -155,9 +159,9 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
     // };
     //.showInformationMessage(header, options, ...["Ok"])
     const confirm = await window.showErrorMessage(
-      `Are you sure you want to delete ${item.label}?`,
+      `Are you sure you want to hide ${item.label}?`,
       "Yes",
-      "No"
+      "No",
     );
     if (confirm === "Yes") {
       const dictionaries = getAllGlobalState(this.context)[
@@ -167,7 +171,7 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
       //const config = workspace.getConfiguration("f4data");
       //const dictionaries = config.get("list") as listDico;
       const dictTokeep = dictionaries.filter(
-        (dict) => dict.name !== item.label
+        (dict) => dict.name !== item.label,
       );
       // await config.update(
       //   "list",
@@ -176,6 +180,7 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
       // );
       const globalStateUpdate = updateGlobalState(this.context);
       await globalStateUpdate("f4data.list", dictTokeep);
+      void syncSharedFile(dictTokeep);
     }
   }
   async on_rename_item(item: Dictionary) {
@@ -193,7 +198,7 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
       await new Promise<string | undefined>((resolve) => {
         input.onDidChangeValue(async (text) => {
           const validationMessage = await validateNameIsUnique(this.context)(
-            text
+            text,
           );
           if (validationMessage !== undefined) {
             input.validationMessage = validationMessage;
@@ -204,7 +209,7 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
           input.enabled = false;
           input.busy = true;
           const validationMessage = await validateNameIsUnique(this.context)(
-            value
+            value,
           );
           if (validationMessage !== undefined) {
             resolve(undefined);
@@ -218,7 +223,7 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
             //const config = workspace.getConfiguration("f4data");
             //const dictionaries = config.get("list") as listDico;
             const dictUpdated = dictionaries.map((dic) =>
-              dic.name === item.label ? { ...dic, name: value } : dic
+              dic.name === item.label ? { ...dic, name: value } : dic,
             );
             // await config.update(
             //   "list",
@@ -227,6 +232,7 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
             // );
             const globalStateUpdate = updateGlobalState(this.context);
             await globalStateUpdate("f4data.list", dictUpdated);
+            void syncSharedFile(dictUpdated);
             resolve(value);
             input.hide();
           }
@@ -250,14 +256,14 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
     //const config = workspace.getConfiguration("f4data");
     //const dictionaries = config.get("list") as listDico;
     const selected_config = dictionaries.find(
-      (dict) => dict.name === item.label
+      (dict) => dict.name === item.label,
     );
     if (selected_config?.work_dir) {
       const uri = Uri.file(selected_config.work_dir);
       await env.openExternal(uri);
     } else {
       await window.showErrorMessage(
-        `Please add a working directory to open it.`
+        `Please add a working directory to open it.`,
       );
     }
   }
@@ -271,7 +277,7 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
     //const config = workspace.getConfiguration("f4data");
     //const dictionaries = config.get("list") as listDico;
     const selected_config = dictionaries.find(
-      (dict) => dict.name === item.label
+      (dict) => dict.name === item.label,
     );
     if (selected_config) {
       const input = window.createInputBox();
@@ -303,7 +309,7 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
               //input.hide();
             } else {
               const dictUpdated = dictionaries.map((dic) =>
-                dic.name === item.label ? { ...dic, work_dir: value } : dic
+                dic.name === item.label ? { ...dic, work_dir: value } : dic,
               );
               // await config.update(
               //   "list",
@@ -312,7 +318,7 @@ export class DictionaryProvider implements TreeDataProvider<Dictionary> {
               // );
               const globalStateUpdate = updateGlobalState(this.context);
               await globalStateUpdate("f4data.list", dictUpdated);
-
+              void syncSharedFile(dictUpdated);
               resolve(value);
               input.hide();
             }

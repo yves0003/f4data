@@ -97,4 +97,5 @@ type TableVariable = {
 type Transformed = {
   rect1: TableVariable;
   rect2: TableVariable;
+  relationship: string;
 };
